@@ -21,6 +21,7 @@ class Settings:
     db_password: str
     db_connect_timeout: int
     api_key: str
+    db_ssl_ca: str | None = None  # ruta al bundle de CA de RDS (opcional)
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -39,6 +40,7 @@ class Settings:
             db_password=requerida("DB_PASSWORD"),
             db_connect_timeout=int(os.getenv("DB_CONNECT_TIMEOUT", "5")),
             api_key=requerida("API_KEY"),
+            db_ssl_ca=os.getenv("DB_SSL_CA") or None,
         )
 
 

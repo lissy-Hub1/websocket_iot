@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel del vehículo IoT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--lila:#E8E0FF;--menta:#D3F2E4;--durazno:#FFE0D3;--cielo:#D6EBFF;--mantequilla:#FFF1C2;--rosa:#FFD9EA;
+--tinta:#3D3556;--suave:#6E6788;--blanco:#FFFDFF;--rad:22px;--sombra:0 10px 30px -14px rgba(94,74,160,.35)}
+*{box-sizing:border-box}
+body{margin:0;font:400 16px/1.5 Nunito,system-ui,sans-serif;color:var(--tinta);
+background:radial-gradient(60rem 30rem at 10% -10%,var(--rosa),transparent 60%),radial-gradient(50rem 28rem at 100% 0,var(--cielo),transparent 60%),var(--lila);min-height:100vh}
+h1,h2{font-family:Fredoka,Nunito,sans-serif;font-weight:600;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 18px 48px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin-bottom:22px}
+h1{font-size:clamp(1.6rem,4vw,2.3rem)}
+.barra{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;background:var(--blanco);font-weight:700;font-size:.9rem;box-shadow:var(--sombra)}
+.punto{width:10px;height:10px;border-radius:50%;background:#C9C2DA}
+.on .punto{background:#5BC796}.err .punto{background:#F08A8A}
+select,input{font:inherit;color:inherit;border:2px solid transparent;background:var(--blanco);border-radius:14px;padding:8px 12px;box-shadow:var(--sombra)}
+a.btn,button{font:700 .95rem Nunito,sans-serif;color:var(--tinta);border:0;border-radius:14px;padding:10px 16px;cursor:pointer;background:var(--blanco);box-shadow:var(--sombra);text-decoration:none;transition:transform .12s}
+button:hover:not(:disabled){transform:translateY(-2px)}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:3px solid #8E7CF0;outline-offset:2px}
+main{display:grid;grid-template-columns:1.25fr 1fr;gap:20px}
+@media(max-width:860px){main{grid-template-columns:1fr}}
+.tarjeta{background:rgba(255,253,255,.78);border-radius:var(--rad);padding:20px;box-shadow:var(--sombra)}
+.col{display:grid;gap:20px;align-content:start}
+.tarjeta h2{font-size:1.2rem;margin-bottom:12px}
+.pista{position:relative;height:290px;border-radius:18px;overflow:hidden;background:
+linear-gradient(var(--menta),var(--menta)) padding-box;background-image:radial-gradient(#fff9 2px,transparent 2.5px);background-size:26px 26px;background-color:var(--menta)}
+.coche{position:absolute;width:64px;height:38px;margin:-19px 0 0 -32px;transition:left .5s ease,top .5s ease,transform .5s ease;will-change:left,top}
+.rastro{position:absolute;width:9px;height:9px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--durazno);transition:opacity 2s linear}
+.estado{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:14px}
+.grande{font:600 1.9rem Fredoka,sans-serif;padding:6px 18px;border-radius:16px;background:var(--mantequilla)}
+.sub{color:var(--suave);font-size:.9rem}
+.botones{display:flex;flex-wrap:wrap;gap:10px}
+.botones button{background:var(--cielo)}
+.botones.demo button{background:var(--rosa)}
+.botones .parar{background:var(--durazno)}
+.clave{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.clave input{flex:1;min-width:160px}
+.barra-demo{height:12px;border-radius:99px;background:var(--lila);overflow:hidden;margin-top:12px}
+.barra-demo i{display:block;height:100%;width:0;background:#B7A4F5;border-radius:99px;transition:width .3s}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:260px;overflow:auto}
+li{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:14px;background:var(--blanco);font-size:.92rem}
+.t{font-weight:700;padding:2px 10px;border-radius:99px;font-size:.8rem;white-space:nowrap}
+.t.movimiento,.t.estado_inicial{background:var(--cielo)}.t.demo_inicio,.t.demo_fin{background:var(--menta)}
+.t.demo_movimiento{background:var(--rosa)}.t.demo_cancelada,.t.demo_error{background:var(--durazno)}
+.vacio{color:var(--suave);padding:6px 2px}
+#aviso{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 18px;border-radius:14px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90vw}
+#aviso.v{opacity:1}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Panel del vehículo</h1>
+  <div class="barra">
+    <select id="veh" aria-label="Vehículo"></select>
+    <span class="chip" id="ws"><span class="punto"></span><span id="wsTxt">Conectando…</span></span>
+    <a class="btn" href="/docs">Documentación</a>
+  </div>
+</header>
+
+<main>
+  <div class="col">
+    <section class="tarjeta">
+      <h2>Pista en vivo</h2>
+      <div class="pista" id="pista">
+        <div class="coche" id="coche">
+          <svg viewBox="0 0 64 38" width="64" height="38" aria-hidden="true">
+            <rect x="6" y="2" width="14" height="8" rx="3" fill="#8E7CF0"/><rect x="6" y="28" width="14" height="8" rx="3" fill="#8E7CF0"/>
+            <rect x="40" y="2" width="14" height="8" rx="3" fill="#8E7CF0"/><rect x="40" y="28" width="14" height="8" rx="3" fill="#8E7CF0"/>
+            <rect x="2" y="7" width="58" height="24" rx="10" fill="#FFB9D6"/><rect x="34" y="11" width="16" height="16" rx="6" fill="#D6EBFF"/>
+            <circle cx="57" cy="13" r="2.5" fill="#FFF1C2"/><circle cx="57" cy="25" r="2.5" fill="#FFF1C2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="estado">
+        <span class="grande" id="cmd">—</span>
+        <div><div id="vehNombre" style="font-weight:700">Sin vehículo</div>
+        <div class="sub" id="conectado">Esperando el último estado…</div></div>
+      </div>
+      <div class="barra-demo" id="bd" hidden><i id="bdi"></i></div>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Control</h2>
+      <div class="clave">
+        <input id="clave" type="password" placeholder="Clave de la API (X-API-Key)" autocomplete="off" aria-label="Clave de la API">
+        <span class="sub">Se guarda solo en esta pestaña.</span>
+      </div>
+      <h2 style="font-size:1rem">Movimientos</h2>
+      <div class="botones" id="cmds"></div>
+      <h2 style="font-size:1rem;margin-top:16px">DEMO</h2>
+      <div class="botones demo" id="demos"></div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section class="tarjeta"><h2>Eventos en tiempo real</h2><ul id="eventos"></ul></section>
+    <section class="tarjeta"><h2>Historial reciente</h2><ul id="hist"></ul></section>
+  </div>
+</main>
+</div>
+<div id="aviso" role="status"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const store = { get:k=>{try{return sessionStorage.getItem(k)}catch(e){return null}}, set:(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}} };
+let idVeh = null, ws = null, reintento = 0, cerrar = false;
+const pos = { x:50, y:50, ang:0 };
+
+function aviso(t){ const a=$('aviso'); a.textContent=t; a.classList.add('v'); clearTimeout(aviso.h); aviso.h=setTimeout(()=>a.classList.remove('v'),3200); }
+function li(lista, nodos, max=30){ const e=document.createElement('li'); nodos.forEach(n=>e.append(n)); lista.prepend(e); while(lista.children.length>max) lista.lastChild.remove(); }
+function etiqueta(tipo){ const s=document.createElement('span'); s.className='t '+tipo; s.textContent=tipo.replace('_',' '); return s; }
+function txt(t){ return document.createTextNode(t); }
+function hora(iso){ try{return new Date(iso).toLocaleTimeString('es-MX')}catch(e){return ''} }
+
+async function api(ruta, opts={}){
+  const h={'Content-Type':'application/json'}; const k=$('clave').value.trim(); if(k) h['X-API-Key']=k;
+  const r=await fetch(ruta,{...opts,headers:h}); let d=null; try{d=await r.json()}catch(e){}
+  if(!r.ok){ const m=d&&d.detail; throw new Error(typeof m==='string'?m:(r.status===422?'Datos no válidos':'Error '+r.status)); }
+  return d;
+}
+
+/* ---- Coche: interpreta el nombre del comando ---- */
+function tipoCmd(n=''){ n=n.toUpperCase();
+  if(/ADELANTE|AVANZ|FRENTE|FORWARD/.test(n)) return 'f';
+  if(/ATR[AÁ]S|RETROC|REVERS|BACK/.test(n)) return 'b';
+  if(/IZQ|LEFT/.test(n)) return 'l';
+  if(/DER|RIGHT/.test(n)) return 'r';
+  if(/DET|STOP|PARAR|ALTO/.test(n)) return 's';
+  return 'o';
+}
+function mover(nombre, ms=500){
+  const t=tipoCmd(nombre), c=$('coche'), p=$('pista');
+  c.style.transitionDuration=Math.min(Math.max(ms,200),2500)+'ms';
+  const paso=(t==='f'||t==='b'||t==='l'||t==='r')?13:0;
+  if(t==='l') pos.ang-=45; if(t==='r') pos.ang+=45;
+  const dir=(t==='b'?-1:1), rad=pos.ang*Math.PI/180;
+  const w=p.clientWidth, h=p.clientHeight;
+  pos.x=Math.min(92,Math.max(8,pos.x+dir*paso*Math.cos(rad)));
+  pos.y=Math.min(86,Math.max(14,pos.y+dir*paso*Math.sin(rad)*(w/h)*.55));
+  const rastro=document.createElement('i'); rastro.className='rastro';
+  rastro.style.left=c.style.left||'50%'; rastro.style.top=c.style.top||'50%'; p.insertBefore(rastro,c);
+  requestAnimationFrame(()=>rastro.style.opacity='0'); setTimeout(()=>rastro.remove(),2200);
+  c.style.left=pos.x+'%'; c.style.top=pos.y+'%'; c.style.transform='rotate('+pos.ang+'deg)';
+}
+
+/* ---- Estado e interfaz ---- */
+function ponerEstado(cmd, conectado){
+  $('cmd').textContent=cmd||'Sin movimientos';
+  if(conectado!==undefined) $('conectado').textContent=conectado?'Vehículo conectado':'Vehículo sin conexión (sin ESP conectado)';
+}
+function evento(e){
+  const f=document.createElement('span'); f.className='sub';
+  const d=[e.comando, e.indice&&e.total?e.indice+'/'+e.total:null, e.detalle].filter(Boolean).join(' · ');
+  f.textContent=(d?d+' · ':'')+hora(e.timestamp);
+  li($('eventos'),[etiqueta(e.tipo),f]);
+  switch(e.tipo){
+    case 'estado_inicial': ponerEstado(e.comando,e.conectado); break;
+    case 'movimiento': ponerEstado(e.comando,e.conectado); mover(e.comando); cargarHistorial(); break;
+    case 'demo_inicio': $('bd').hidden=false; $('bdi').style.width='0'; aviso('DEMO iniciada'); break;
+    case 'demo_movimiento': ponerEstado(e.comando); mover(e.comando,e.duracion_ms);
+      if(e.total) $('bdi').style.width=Math.round(e.indice/e.total*100)+'%'; break;
+    case 'demo_fin': $('bdi').style.width='100%'; aviso('DEMO terminada'); setTimeout(()=>$('bd').hidden=true,1500); break;
+    case 'demo_cancelada': $('bd').hidden=true; aviso('DEMO cancelada'); break;
+    case 'demo_error': aviso('Error en la DEMO'+(e.detalle?': '+e.detalle:'')); break;
+  }
+}
+
+/* ---- WebSocket ---- */
+function conectar(){
+  if(ws){ cerrar=true; ws.close(); }
+  if(!idVeh) return;
+  cerrar=false;
+  const url=(location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws/vehiculos/'+idVeh;
+  const socket=ws=new WebSocket(url);
+  const chip=$('ws');
+  socket.onopen=()=>{ reintento=0; chip.className='chip on'; $('wsTxt').textContent='En vivo (WSS)'; };
+  socket.onmessage=m=>{ try{evento(JSON.parse(m.data))}catch(e){} };
+  socket.onclose=()=>{ if(cerrar||socket!==ws) return; chip.className='chip err'; $('wsTxt').textContent='Reconectando…';
+    setTimeout(conectar,Math.min(1000*2**reintento++,10000)); };
+}
+
+/* ---- Datos ---- */
+function boton(texto, clase, fn){ const b=document.createElement('button'); b.textContent=texto; if(clase) b.className=clase;
+  b.onclick=async()=>{ b.disabled=true; try{ await fn(); }catch(e){ aviso(e.message); } b.disabled=false; }; return b; }
+
+async function cargarVehiculo(){
+  $('eventos').replaceChildren(); $('cmds').replaceChildren(); $('demos').replaceChildren();
+  const v=await api('/vehiculos/'+idVeh);
+  $('vehNombre').textContent=v.nombre||('Vehículo '+idVeh);
+  (v.comandos||[]).filter(c=>c.activo).forEach(c=>$('cmds').append(
+    boton(c.nombre,'',async()=>{ await api('/vehiculos/'+idVeh+'/movimientos',{method:'POST',body:JSON.stringify({id_comando:c.id_comando,origen:'PANEL'})}); })));
+  const ds=(v.demos||[]).filter(d=>d.activo);
+  ds.forEach(d=>$('demos').append(
+    boton('▶ '+d.nombre,'',async()=>{ await api('/vehiculos/'+idVeh+'/demos/'+d.id_demo+'/iniciar',{method:'POST'}); })));
+  if(ds.length) $('demos').append(boton('Cancelar DEMO','parar',async()=>{ await api('/vehiculos/'+idVeh+'/demos/cancelar',{method:'POST'}); }));
+  if(!v.comandos||!v.comandos.length) $('cmds').innerHTML='<span class="vacio">Este vehículo no tiene comandos.</span>';
+  if(!ds.length) $('demos').innerHTML='<span class="vacio">Este vehículo no tiene DEMO.</span>';
+  if(v.estado) ponerEstado(v.estado.comando,v.estado.conectado);
+  cargarHistorial(); conectar();
+}
+async function cargarHistorial(){
+  try{
+    const d=await api('/vehiculos/'+idVeh+'/historial'); const ul=$('hist'); ul.replaceChildren();
+    if(!d.movimientos.length){ ul.innerHTML='<li class="vacio">Aún no hay movimientos individuales.</li>'; return; }
+    d.movimientos.forEach(m=>{ const s=document.createElement('span'); s.className='sub'; s.textContent=m.origen+' · '+hora(m.fecha_hora);
+      li(ul,[txt(m.comando||'—'),s],10); });
+    [...ul.children].reverse().forEach(x=>ul.append(x)); // prepend invirtió el orden: más reciente arriba
+  }catch(e){}
+}
+
+async function iniciar(){
+  $('clave').value=store.get('clave')||''; $('clave').oninput=()=>store.set('clave',$('clave').value);
+  try{
+    const vs=await api('/vehiculos'); const sel=$('veh');
+    vs.forEach(v=>{ const o=document.createElement('option'); o.value=v.id_vehiculo; o.textContent=v.nombre; sel.append(o); });
+    sel.onchange=()=>{ idVeh=sel.value; cargarVehiculo().catch(e=>aviso(e.message)); };
+    if(vs.length){ idVeh=vs[0].id_vehiculo; await cargarVehiculo(); } else aviso('No hay vehículos registrados');
+  }catch(e){ aviso('No se pudo cargar: '+e.message); $('ws').className='chip err'; $('wsTxt').textContent='Sin conexión con la API'; }
+}
+const c0=$('coche'); c0.style.left='50%'; c0.style.top='50%';
+iniciar();
+</script>
+</body>
+</html>

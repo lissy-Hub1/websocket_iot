@@ -1,11 +1,15 @@
-# API IoT – Vehículo (Práctica 2.5)
+# API IoT – Vehículo (Examen 2.6 · desplegada en AWS)
 
-API local en **Python + FastAPI** (programación orientada a objetos) sobre la base `vehiculo_iot` de **Amazon RDS**.
+API pública en **Python + FastAPI** (programación orientada a objetos) sobre la base `vehiculo_iot` de **Amazon RDS**.
 Usa los **21 Stored Procedures** del esquema, GET/POST, **WebSocket** por vehículo y ejecución de **DEMO**.
-Todo corre en `http://localhost:8000` (no hay despliegue público; eso es la práctica 2.6).
+Corre en **Amazon EC2** detrás de **Caddy (HTTPS/WSS automático)** y usa **Amazon RDS for MySQL**.
+
+* Swagger UI: **https://TU_DOMINIO/docs**
+* WebSocket: **wss://TU_DOMINIO/ws/vehiculos/{id_vehiculo}**
+* Repositorio: **https://github.com/TU_USUARIO/TU_REPO**
 
 ```
-VS Code + Thunder Client  →  FastAPI (GET / POST / WebSocket)  →  Stored Procedures  →  Amazon RDS
+Thunder Client / Swagger  →  HTTPS/WSS (Caddy, 443)  →  FastAPI en EC2 (127.0.0.1:8000)  →  Stored Procedures  →  Amazon RDS (3306, solo desde el SG de EC2)
 ```
 
 ## Reglas de negocio
@@ -40,7 +44,12 @@ models/                     # Modelos Pydantic de entrada/salida y eventos WebSo
 routers/                    # Endpoints HTTP y WebSocket (delgados)
 ```
 
-## Ejecución local
+## Despliegue en EC2
+* **Windows Server:** [DESPLIEGUE_WINDOWS.md](DESPLIEGUE_WINDOWS.md) y `deploy/windows/` (tareas programadas + Caddy).
+* **Linux:** [DESPLIEGUE_EC2.md](DESPLIEGUE_EC2.md) y `deploy/` (systemd + Caddy).
+La API corre con **un solo worker** porque el `ConnectionManager` y las DEMO en curso viven en memoria.
+
+## Ejecución local (desarrollo)
 
 ```bash
 python -m venv .venv
@@ -51,7 +60,7 @@ python -m uvicorn main:app --reload --port 8000
 ```
 
 * Swagger UI: <http://localhost:8000/docs>
-* El Security Group de RDS debe permitir MySQL/Aurora TCP 3306 desde **My IP**.
+* En desarrollo local, el Security Group de RDS debe permitir 3306 desde **My IP** (en producción, solo desde el SG de la instancia EC2).
 * `.env` está en `.gitignore`: nunca lo subas a GitHub.
 
 ### Autenticación
@@ -95,7 +104,8 @@ También se acepta `{ "codigo": 1 }` en lugar de `id_comando` (indica exactament
 
 ## WebSocket
 
-**URL:** `ws://localhost:8000/ws/vehiculos/{id_vehiculo}`  (p. ej. `ws://localhost:8000/ws/vehiculos/1`)
+**URL pública:** `wss://TU_DOMINIO/ws/vehiculos/{id_vehiculo}`  (p. ej. `wss://TU_DOMINIO/ws/vehiculos/1`)
+**URL local (desarrollo):** `ws://localhost:8000/ws/vehiculos/{id_vehiculo}`
 
 * Al conectarse envía el último estado (`estado_inicial`).
 * Varios clientes pueden monitorear el mismo vehículo; cada cliente recibe solo eventos de **su** vehículo.
@@ -130,16 +140,16 @@ Ejemplos:
 Si el catálogo del vehículo tiene un comando activo llamado **`DETENER`**, se deja como último comando con `sp_actualizar_estado`
 (también ante un error). Nunca se escribe en el historial.
 
-## Pruebas en Thunder Client (las 3 de la práctica)
+## Pruebas en Thunder Client (los 3 escenarios del examen, contra el servicio público)
 
 Variable sugerida: `API_KEY` y encabezado `X-API-Key: {{API_KEY}}` en los POST protegidos.
 
-1. **POST** `http://localhost:8000/vehiculos/1/movimientos` — Body JSON `{"id_comando": 1, "origen": "MANUAL"}` → `201`.
+1. **POST** `https://TU_DOMINIO/vehiculos/1/movimientos` — Body JSON `{"id_comando": 1, "origen": "MANUAL"}` → `201`.
    Verifica en MySQL: `select * from estado_vehiculo;` y `select * from historial_comandos order by id_historial desc limit 5;`
-2. **GET** `http://localhost:8000/vehiculos/1/historial` → máximo 10 movimientos, del más reciente al más antiguo.
+2. **GET** `https://TU_DOMINIO/vehiculos/1/historial` → máximo 10 movimientos, del más reciente al más antiguo.
    Comprueba el límite con `select count(*) from historial_comandos where id_vehiculo=1;` (si hay más de 10, la API devuelve 10).
-3. **WebSocket** `ws://localhost:8000/ws/vehiculos/1` → conecta, y desde otra pestaña haz **POST**
-   `http://localhost:8000/vehiculos/1/demos/1/iniciar` (con `X-API-Key`). Verás `demo_inicio`, N × `demo_movimiento`, `demo_fin`.
+3. **WebSocket** `wss://TU_DOMINIO/ws/vehiculos/1` → conecta, y desde otra pestaña haz **POST**
+   `https://TU_DOMINIO/vehiculos/1/demos/1/iniciar` (con `X-API-Key`). Verás `demo_inicio`, N × `demo_movimiento`, `demo_fin`.
    Compara `select count(*) from historial_comandos;` antes y después: **no cambia**.
 
 ## Códigos HTTP usados

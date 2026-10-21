@@ -19,3 +19,7 @@ __MACOSX/
 
 # Logs
 *.log
+
+# Llaves y certificados
+*.pem
+*.key
