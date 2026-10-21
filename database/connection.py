@@ -33,6 +33,8 @@ class Database:
                 autocommit=False,
                 # rowcount = filas COINCIDENTES (no solo modificadas) para detectar "no existe"
                 client_flag=CLIENT.FOUND_ROWS,
+                # Cifra el tráfico EC2 -> RDS si se configura DB_SSL_CA (ver DESPLIEGUE_EC2.md)
+                ssl_ca=self._s.db_ssl_ca,
             )
         except pymysql.err.OperationalError as exc:
             log.error("No se pudo conectar a la base de datos: %s", exc.args[:1])
