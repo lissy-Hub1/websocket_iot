@@ -77,6 +77,13 @@
     <p class="nota nota-conexion mb-0">Estos estados no confirman que el vehículo físico esté conectado.</p>
   </section>
 
+  <details class="tarjeta mb-3" id="ajustes">
+    <summary><svg class="ico" aria-hidden="true"><use href="#i-llave"/></svg>Clave de operación</summary>
+    <label class="form-label mt-3" for="clave">Clave de la API (X-API-Key)</label>
+    <input class="form-control" id="clave" type="password" autocomplete="off" spellcheck="false">
+    <p class="nota mt-2 mb-0">Se escribe al operar y queda solo en esta pestaña. No se publica en el repositorio.</p>
+  </details>
+
   <div class="alert alerta-carga d-flex flex-wrap align-items-center gap-2" id="alertaCarga" role="alert" hidden>
     <span id="alertaCargaTexto" class="flex-grow-1"></span>
     <button type="button" class="btn boton-secundario" id="reintentarCarga">Reintentar</button>
@@ -140,14 +147,6 @@
             <p class="traza-evento" id="trazaEvento">Aún no se reciben eventos.</p>
             <p class="nota mb-0">Un evento confirma que el backend lo publicó, no que los motores se movieron.</p>
           </section>
-        </div>
-        <div class="col-12">
-          <details class="tarjeta" id="ajustes">
-            <summary><svg class="ico" aria-hidden="true"><use href="#i-llave"/></svg>Clave de operación</summary>
-            <label class="form-label mt-3" for="clave">Clave de la API (X-API-Key)</label>
-            <input class="form-control" id="clave" type="password" autocomplete="off" spellcheck="false">
-            <p class="nota mt-2 mb-0">Se escribe al operar y queda solo en esta pestaña. No se publica en el repositorio.</p>
-          </details>
         </div>
       </div>
     </div>
