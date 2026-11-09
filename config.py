@@ -44,6 +44,11 @@ class Settings:
         )
 
 
+def origenes_cors() -> list[str]:
+    """Orígenes autorizados para el frontend (CORS_ORIGINS separados por coma). Vacío = sin CORS."""
+    return [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
+
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings.from_env()

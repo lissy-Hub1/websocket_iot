@@ -5,11 +5,12 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
 from fastapi.responses import FileResponse, JSONResponse
 
-from config import get_settings
+from config import get_settings, origenes_cors
 from dependencies import Contenedor
 from exceptions import ErrorDeNegocio
 from routers import comandos, demos, estado, movimientos, vehiculos, ws
@@ -50,6 +51,15 @@ app = FastAPI(
     openapi_tags=ETIQUETAS,
     lifespan=lifespan,
 )
+
+# CORS no autentica: solo indica qué páginas pueden leer las respuestas desde el navegador.
+if origenes := origenes_cors():
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origenes,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type", "X-API-Key"],
+    )
 
 for modulo in (vehiculos, comandos, estado, movimientos, demos, ws):
     app.include_router(modulo.router)

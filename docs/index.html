@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E8E0FF">
+<meta name="description" content="Aplicación web de control para un vehículo IoT: joystick, comandos y DEMO.">
+<title>Control de vehículo IoT</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Outfit:wght@400;500;600;700&family=Orbitron:wght@600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link href="css/estilos.css" rel="stylesheet">
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+<a class="visually-hidden-focusable salto" href="#zonaControl">Saltar a los controles</a>
+
+<svg width="0" height="0" class="position-absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 10"/></symbol>
+  <symbol id="i-alerta" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></symbol>
+  <symbol id="i-reloj" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-circulo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></symbol>
+  <symbol id="i-rayo" viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></symbol>
+  <symbol id="i-giro-der" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.5-5.8L20 8.5M20 4v4.5h-4.5"/></symbol>
+  <symbol id="i-giro-izq" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.5-5.8L4 8.5M4 4v4.5h4.5"/></symbol>
+  <symbol id="i-giro-360" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-flecha" viewBox="0 0 24 24"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></symbol>
+  <symbol id="i-excavar" viewBox="0 0 24 24"><path d="M3 4h6l4 6"/><path d="M11 10l-2 5h9l2-5z"/><path d="M13 19h4"/></symbol>
+  <symbol id="i-descargar" viewBox="0 0 24 24"><path d="M12 14V4M7.5 8.5L12 4l4.5 4.5"/><path d="M4 13v6h16v-6"/></symbol>
+  <symbol id="i-luz" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/></symbol>
+  <symbol id="i-musica" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></symbol>
+  <symbol id="i-demo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/></symbol>
+  <symbol id="i-encender" viewBox="0 0 24 24"><path d="M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0"/></symbol>
+  <symbol id="i-mando" viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="11" rx="5"/><path d="M7.5 10.5v4M5.5 12.5h4"/><circle cx="15.5" cy="11.5" r=".8"/><circle cx="18" cy="13.5" r=".8"/></symbol>
+  <symbol id="i-parar" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+  <symbol id="i-jugar" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+  <symbol id="i-llave" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M17 6l3 3M14.5 8.5l2 2"/></symbol>
+  <symbol id="i-ws" viewBox="0 0 24 24"><path d="M4 9a11 11 0 0 1 16 0M7.5 12.5a6 6 0 0 1 9 0"/><circle cx="12" cy="17" r="1.5"/></symbol>
+  <symbol id="i-nube" viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1-.7-8.9 6 6 0 0 1 11.5 1.4A3.8 3.8 0 0 1 17 18z"/></symbol>
+  <symbol id="i-bd" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3"/></symbol>
+</svg>
+
+<header class="encabezado container-xl">
+  <img src="img/favicon.svg" width="44" height="44" alt="" class="encabezado-logo">
+  <div class="encabezado-texto">
+    <p class="encabezado-sub">Control de vehículo IoT</p>
+    <h1 id="vehNombre">Cargando vehículo…</h1>
+    <p id="vehDetalle" class="texto-suave mb-0"></p>
+  </div>
+</header>
+
+<main class="container-xl">
+  <section aria-labelledby="tituloConexion" class="mb-3">
+    <h2 id="tituloConexion" class="visually-hidden">Estado de conexión</h2>
+    <ul class="row row-cols-3 g-2 list-unstyled mb-1">
+      <li class="col"><div class="indicador" id="ind-ws" data-tono="neutro">
+        <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-ws"/></svg>
+        <span class="ind-nombre">WebSocket WSS</span>
+        <span class="ind-estado"><span id="ind-ws-icono"></span><span id="ind-ws-estado" role="status">Desconectado</span></span>
+      </div></li>
+      <li class="col"><div class="indicador" id="ind-api" data-tono="neutro">
+        <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-nube"/></svg>
+        <span class="ind-nombre">Servidor AWS · API de 21 servicios</span>
+        <span class="ind-estado"><span id="ind-api-icono"></span><span id="ind-api-estado" role="status">Comprobando…</span></span>
+      </div></li>
+      <li class="col"><div class="indicador" id="ind-rds" data-tono="neutro">
+        <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-bd"/></svg>
+        <span class="ind-nombre">Amazon RDS</span>
+        <span class="ind-estado"><span id="ind-rds-icono"></span><span id="ind-rds-estado" role="status">Sin verificar</span></span>
+      </div></li>
+    </ul>
+    <p class="nota nota-conexion mb-0">Estos estados no confirman que el vehículo físico esté conectado.</p>
+  </section>
+
+  <div class="alert alerta-carga d-flex flex-wrap align-items-center gap-2" id="alertaCarga" role="alert" hidden>
+    <span id="alertaCargaTexto" class="flex-grow-1"></span>
+    <button type="button" class="btn boton-secundario" id="reintentarCarga">Reintentar</button>
+  </div>
+
+  <div class="row g-3 distribucion">
+    <div class="col-12 col-lg-7 columna-control">
+      <section class="tarjeta" id="zonaControl" aria-labelledby="tituloMando" tabindex="-1">
+        <h2 id="tituloMando"><svg class="ico" aria-hidden="true"><use href="#i-mando"/></svg>Controles</h2>
+        <div class="mando" id="mando">
+          <div class="mando-principal">
+            <div class="zona-joystick">
+              <div class="joystick" id="joystick" role="group" aria-label="Joystick del vehículo. Usa las flechas del teclado y suelta para detener." aria-disabled="true" data-direccion="neutral">
+                <span class="dir dir-adelante" id="dir-adelante" data-vacio="true">—</span>
+                <span class="dir dir-atras" id="dir-atras" data-vacio="true">—</span>
+                <span class="dir dir-izquierda" id="dir-izquierda" data-vacio="true">—</span>
+                <span class="dir dir-derecha" id="dir-derecha" data-vacio="true">—</span>
+                <span class="joystick-centro" aria-hidden="true"></span>
+                <span class="perilla" id="perilla" aria-hidden="true"></span>
+              </div>
+              <p class="nota text-center mt-2 mb-2" id="joystickNota"></p>
+              <button type="button" class="boton-detener" id="detener" disabled>
+                <svg class="ico" aria-hidden="true"><use href="#i-parar"/></svg>DETENER
+              </button>
+            </div>
+            <div class="grupos" id="mandoGrupos"></div>
+          </div>
+          <div class="funciones" id="mandoFunciones" role="group" aria-label="Funciones" hidden></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-12 col-lg-5 columna-resto">
+      <div class="row g-3">
+        <div class="col-12">
+          <section class="tarjeta h-100" aria-labelledby="tituloDemo">
+            <h2 id="tituloDemo">Secuencia DEMO</h2>
+            <label class="visually-hidden" for="demoSelector">Elige una DEMO del vehículo</label>
+            <div class="demo-fila">
+              <select class="form-select" id="demoSelector" disabled><option value="">Cargando…</option></select>
+              <div class="demo-botones">
+                <button type="button" class="btn boton-principal" id="demoIniciar" disabled>
+                  <svg class="ico" aria-hidden="true"><use href="#i-jugar"/></svg>Ejecutar
+                </button>
+                <button type="button" class="btn boton-secundario" id="demoCancelar" disabled>
+                  <svg class="ico" aria-hidden="true"><use href="#i-parar"/></svg>Cancelar
+                </button>
+              </div>
+            </div>
+            <p class="texto-suave mt-2 mb-1" id="demoEstado" role="status"></p>
+            <div class="progress demo-barra" id="demoBarra" role="progressbar" aria-label="Avance de la DEMO" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div class="progress-bar"></div></div>
+          </section>
+        </div>
+        <div class="col-12">
+          <section class="tarjeta h-100" aria-labelledby="tituloTraza">
+            <h2 id="tituloTraza">Última acción</h2>
+            <p class="traza-comando" id="trazaComando" aria-live="polite"></p>
+            <ol class="traza-pasos" id="trazaPasos"></ol>
+            <p class="traza-error" id="trazaError" role="alert" hidden></p>
+            <p class="nota mb-1 mt-2">Último evento WebSocket:</p>
+            <p class="traza-evento" id="trazaEvento">Aún no se reciben eventos.</p>
+            <p class="nota mb-0">Un evento confirma que el backend lo publicó, no que los motores se movieron.</p>
+          </section>
+        </div>
+        <div class="col-12">
+          <details class="tarjeta" id="ajustes">
+            <summary><svg class="ico" aria-hidden="true"><use href="#i-llave"/></svg>Clave de operación</summary>
+            <label class="form-label mt-3" for="clave">Clave de la API (X-API-Key)</label>
+            <input class="form-control" id="clave" type="password" autocomplete="off" spellcheck="false">
+            <p class="nota mt-2 mb-0">Se escribe al operar y queda solo en esta pestaña. No se publica en el repositorio.</p>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="pie container-xl"><p class="mb-0" id="creditos"></p></footer>
+<div id="avisos" class="avisos" aria-live="polite"></div>
+<noscript><p class="alert alerta-carga m-3">Esta aplicación necesita JavaScript para funcionar.</p></noscript>
+</body>
+</html>

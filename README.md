@@ -12,6 +12,10 @@ Corre en **Amazon EC2** detrás de **Caddy (HTTPS/WSS automático)** y usa **Ama
 Thunder Client / Swagger  →  HTTPS/WSS (Caddy, 443)  →  FastAPI en EC2 (127.0.0.1:8000)  →  Stored Procedures  →  Amazon RDS (3306, solo desde el SG de EC2)
 ```
 
+## Aplicación de CONTROL (práctica 4.1)
+
+El frontend publicado en GitHub Pages está en [`docs/`](docs/README.md). Para que pueda llamar a esta API, define `CORS_ORIGINS` en `.env` con el origen de Pages.
+
 ## Reglas de negocio
 
 | Flujo | Qué hace | Historial |
