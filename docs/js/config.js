@@ -2,7 +2,7 @@
    este archivo se publica tal cual en GitHub Pages. */
 export const CONFIG = Object.freeze({
   // URL base HTTPS de tu API en AWS, sin diagonal final. Ejemplo: 'https://miiot.duckdns.org'
-  API_BASE_URL: 'https://miiot.duckdns.org',
+  API_BASE_URL: 'https://miwebiot.duckdns.org',
   VEHICLE_ID: 1,
   ALUMNO: 'Lisset Gutiérrez Cruz',
   ANIO: 2026,
