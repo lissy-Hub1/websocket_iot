@@ -129,15 +129,6 @@ h2 { font-size: 1.02rem; margin-bottom: .75rem; }
 .boton-detener:disabled { background: #A79FBB; box-shadow: none; cursor: not-allowed; }
 .boton-detener .ico { width: 26px; height: 26px; fill: currentColor; }
 
-/* ---- Traza ---- */
-.traza-comando { font: 700 1.05rem Orbitron, Sora, sans-serif; margin-bottom: .55rem; overflow-wrap: anywhere; }
-.traza-pasos { list-style: none; padding: 0; margin: 0; display: grid; gap: .3rem; }
-.paso { display: flex; align-items: center; gap: .45rem; font-size: .9rem; color: var(--suave); }
-.paso-hecho { color: var(--ok-texto); font-weight: 600; }
-.paso-fallo { color: var(--mal-texto); font-weight: 600; }
-.traza-error { margin: .5rem 0 0; font-size: .86rem; color: var(--mal-texto); font-weight: 600; }
-.traza-evento { font: 400 .82rem var(--mono); margin-bottom: .35rem; overflow-wrap: anywhere; }
-
 /* ---- Mando: cruceta, grupos y funciones ---- */
 h2 .ico { color: var(--neon); margin-right: .4rem; vertical-align: -4px; }
 .mando {
@@ -231,23 +222,114 @@ summary { display: flex; align-items: center; gap: .5rem; min-height: 44px; font
   .joystick { --tam: clamp(220px, 26vw, 280px); }
 }
 
-/* ---- Celular horizontal: joystick a un lado, resto al otro ---- */
-@media (orientation: landscape) and (max-height: 520px) {
-  .encabezado { padding-top: .4rem; padding-bottom: .3rem; }
-  .encabezado-logo { width: 32px; height: 32px; }
+/* ---- Celular vertical: el mando primero, sin desperdiciar alto ---- */
+@media (orientation: portrait) and (max-width: 575.98px) {
+  .encabezado { padding-bottom: .5rem; }
+  .encabezado-logo { width: 38px; height: 38px; }
+  main > section.mb-3, #ajustes.mb-3 { margin-bottom: .6rem !important; }
+  .tarjeta { padding: .8rem; }
+  .mando { padding: .7rem; gap: .8rem; }
+  .joystick { --tam: clamp(196px, 64vw, 270px); }
+  .boton-detener { min-height: 58px; }
+}
+
+/* ---- Celular horizontal: todo cabe en una pantalla, sin scroll de página ----
+   Izquierda: el mando completo. Derecha: estados de conexión, clave y DEMO
+   (esa columna, si no alcanza, se desplaza por dentro). */
+@media (orientation: landscape) and (max-height: 540px) {
+  html, body { height: 100%; overflow: hidden; }
+  body { height: 100vh; height: 100dvh; min-height: 0; overscroll-behavior: none; }
+
+  :root { --alto-enc: 38px; --pie-main: max(.5rem, env(safe-area-inset-bottom)); }
+  .encabezado { flex: none; height: var(--alto-enc); padding-top: 0; padding-bottom: 0; gap: .5rem; }
+  .encabezado-logo { width: 26px; height: 26px; border-radius: 8px; }
   .encabezado-sub, .encabezado .texto-suave { display: none; }
-  .distribucion { flex-wrap: nowrap; }
-  .columna-control { flex: 0 0 auto; width: 60%; }
-  .columna-resto { flex: 1 1 0; width: auto; min-width: 0; }
-  .zona-joystick { flex-direction: row; gap: .6rem; max-width: none; }
-  .mando { padding: .6rem; gap: .6rem; }
-  .mando-principal { grid-template-columns: 1fr; }
-  .joystick { --tam: min(164px, 46vh); }
-  .dir { font-size: .5rem; white-space: nowrap; max-width: 30%; text-overflow: ellipsis; }
-  #joystickNota, .nota-conexion { display: none; }
-  .boton-detener { flex: 1 1 0; min-width: 0; width: auto; min-height: 96px; flex-direction: column; gap: .2rem; font-size: .78rem; letter-spacing: 0; }
-  .indicador { flex-direction: row; flex-wrap: wrap; align-items: center; padding: .3rem .5rem; }
-  .ind-tipo { display: none; }
+  .encabezado h1 { font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pie { display: none; }
+
+  /* Solo la columna derecha se desplaza; el mando queda fijo (sticky) a la izquierda. */
+  main {
+    flex: 1 1 auto; min-height: 0;
+    display: grid; gap: .5rem; align-content: start;
+    grid-template-columns: minmax(0, 1fr) clamp(180px, 28vw, 290px);
+    overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--pie-main);
+  }
+  main > * { margin: 0 !important; min-width: 0; }
+  .distribucion { display: contents; }
+  .columna-control {
+    grid-column: 1; grid-row: 1 / span 4; align-self: start; position: sticky; top: 0;
+    width: auto; padding: 0; margin: 0; height: calc(100vh - var(--alto-enc) - var(--pie-main));
+    height: calc(100dvh - var(--alto-enc) - var(--pie-main));
+  }
+  main > section:first-child { grid-column: 2; grid-row: 1; }
+  #ajustes { grid-column: 2; grid-row: 2; }
+  #alertaCarga { grid-column: 2; grid-row: 3; }
+  .columna-resto { grid-column: 2; grid-row: 4; width: auto; padding: 0; margin: 0; }
+  .columna-resto > .row { --bs-gutter-y: .5rem; --bs-gutter-x: 0; margin: 0; }
+  .columna-resto > .row > * { padding: 0; }
+
+  /* Estados de conexión: tres filas compactas arriba a la derecha. */
+  main > section:first-child ul { display: grid; gap: .3rem; margin: 0 !important; }
+  main > section:first-child ul > .col { width: 100%; min-width: 0; padding: 0; margin: 0; }
+  .indicador { min-width: 0; flex-direction: row; align-items: center; gap: .4rem; padding: .28rem .5rem; border-top-width: 1px; border-left: 4px solid #A49BBD; box-shadow: none; }
+  .indicador[data-tono="bien"] { border-left-color: var(--neon-menta); }
+  .indicador[data-tono="espera"] { border-left-color: #F5C400; }
+  .indicador[data-tono="mal"] { border-left-color: var(--rojo-accion); }
+  .ind-tipo { width: 14px; height: 14px; }
+  .ind-nombre { font-size: .66rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .ind-estado { font-size: .7rem; white-space: nowrap; flex: none; }
+  .nota-conexion { display: none; }
+
+  .tarjeta { padding: .6rem .7rem; border-radius: var(--rad-s); }
+  h2 { font-size: .9rem; margin-bottom: .4rem; }
+  summary { min-height: 34px; font-size: .9rem; }
+  #ajustes .form-label { margin-top: .5rem !important; font-size: .8rem; }
+
+  /* DEMO: que el select y los botones nunca sean más anchos que la columna. */
+  .demo-fila, .demo-fila > *, .demo-botones > * { min-width: 0; }
+  #demoSelector { width: 100%; font-size: .85rem; padding-left: .6rem; padding-right: 1.8rem; background-position: right .5rem center; text-overflow: ellipsis; }
+  .demo-fila { gap: .4rem; }
+  .demo-botones { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; }
+  .demo-botones .btn { padding: .25rem .35rem; font-size: .8rem; gap: .25rem; white-space: nowrap; overflow: hidden; }
+  .demo-botones .ico { width: 16px; height: 16px; }
+  .btn, .form-select, .form-control { min-height: 40px; }
+
+  /* Mando a todo el alto disponible. */
+  #zonaControl { height: 100%; display: flex; flex-direction: column; padding: .5rem; }
+  #tituloMando { display: none; }
+  /* Joystick + DETENER a la izquierda a todo el alto; grupos arriba y funciones abajo a la derecha. */
+  .mando {
+    flex: 1 1 auto; min-height: 0; padding: .5rem; gap: .4rem .7rem;
+    grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .mando-principal { display: contents; }
+  .zona-joystick { grid-column: 1; grid-row: 1 / -1; max-width: none; width: auto; gap: .45rem; justify-content: center; }
+  .grupos { grid-column: 2; grid-row: 1; }
+  .funciones { grid-column: 2; grid-row: 2; }
+  /* Alto de pantalla menos encabezado, márgenes y botón DETENER. */
+  .joystick { --tam: max(110px, min(calc(100dvh - 140px), 30vw, 230px)); }
+  #joystickNota { display: none; }
+  .dir { font-size: .55rem; white-space: nowrap; max-width: 30%; text-overflow: ellipsis; }
+  .boton-detener { min-height: 46px; font-size: .9rem; border-radius: 14px; box-shadow: 0 4px 0 #8E1C3B, 0 0 20px -6px var(--rojo-accion); }
+  .boton-detener .ico { width: 20px; height: 20px; }
+
+  .grupos {
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: .4rem .5rem;
+    align-content: start; align-content: safe center;
+    max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
+  }
+  .grupo-titulo { margin-bottom: .2rem; font-size: .6rem; }
+  .grupo-botones { gap: .35rem; }
+  .par-btn .m-forma { min-height: 44px; border-radius: 12px; padding: .2rem; }
+  .par-btn .ico { width: 18px; height: 18px; }
+  .par-btn .m-texto, .fun-btn .m-texto { font-size: .6rem; }
+
+  .funciones { flex-wrap: nowrap; overflow-x: auto; justify-content: space-evenly; gap: .4rem; padding-top: .45rem; }
+  .fun-btn { min-width: 44px; gap: .15rem; }
+  .fun-btn .m-forma { width: 38px; height: 38px; }
+  .fun-btn .ico { width: 20px; height: 20px; }
+
 }
 
 @media (prefers-reduced-motion: reduce) {

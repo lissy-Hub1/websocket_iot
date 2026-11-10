@@ -12,7 +12,6 @@ import { $ } from './ui/componentes.js';
 import { pintarDemos, pintarEstadoDemo, pintarEstadoMando, pintarMando } from './ui/controles.js';
 import { pintarSalud, pintarWebSocket } from './ui/indicadores.js';
 import { crearJoystick } from './ui/joystick.js';
-import { pintarTraza, pintarUltimoEvento } from './ui/traza.js';
 import { mensajeDeError } from './utilidades/errores.js';
 
 const NOMBRES_DIRECCION = { adelante: 'avanzar', atras: 'retroceder', izquierda: 'izquierda', derecha: 'derecha' };
@@ -72,7 +71,6 @@ function refrescar() {
   const listo = Boolean(catalogo) && vehiculo?.activo === true;
 
   joystick.habilitar(listo && !hayDemo);
-  pintarTraza(actual);
   pintarEstadoMando(actual, !listo || hayDemo || joystick.activo());
   pintarEstadoDemo(faseDemo, { puedeIniciar: listo && !joystick.activo() });
   $('detener').disabled = !catalogo?.detener;
@@ -126,7 +124,6 @@ async function cargarVehiculo() {
 
 function alRecibirEvento(evento) {
   if (evento.id_vehiculo !== CONFIG.VEHICLE_ID || typeof evento.tipo !== 'string') return;
-  pintarUltimoEvento(evento);
   control.registrarEvento(evento);
   demos.procesarEvento(evento);
 }
@@ -157,7 +154,6 @@ function enlazarEventos() {
 
 function iniciar() {
   $('creditos').textContent = `Desarrollado por ${CONFIG.ALUMNO} · ${CONFIG.ANIO}`;
-  pintarTraza(null);
   pintarWebSocket('desconectado', {});
   pintarSalud({ api: 'comprobando', rds: 'sin_verificar', verificado: null });
   enlazarEventos();
