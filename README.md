@@ -1,8 +1,7 @@
 # Aplicación de CONTROL para vehículo IoT (práctica 4.1)
 
 Frontend Mobile First publicado en GitHub Pages: https://lissy-hub1.github.io/websocket_iot/
-La API (FastAPI en AWS) está en su propio repositorio: https://github.com/lissy-Hub1/websocket_iot_aws Controla el vehículo con joystick, botones y DEMO
-consumiendo la API FastAPI ya desplegada en AWS. No incluye monitoreo, CRUD ni control físico del ESP.
+consumiendo la API FastAPI ya desplegada en AWS.
 
 ```
 GitHub Pages → Fetch/async-await → API REST en AWS (FastAPI) → Amazon RDS
@@ -108,7 +107,7 @@ siempre «Sin verificar» en RDS, pon `diagnosticoRds: null` en `RUTAS` de `conf
 ## Pruebas funcionales y evidencias
 
 Abre además un cliente WebSocket independiente (Postman, Thunder Client o extensión de Chrome) en
-`wss://TU_DOMINIO/ws/vehiculos/{id}`. Debe recibir `estado_inicial` al conectarse.
+`wss://miwebiot.duckdns.org/ws/vehiculos/{id}`. Debe recibir `estado_inicial` al conectarse.
 
 | Prueba | Pasos | Resultado esperado en el cliente externo |
 |---|---|---|
