@@ -149,6 +149,11 @@ function enlazarEventos() {
   const campoClave = $('clave');
   campoClave.value = obtenerClave();
   campoClave.addEventListener('input', () => guardarClave(campoClave.value));
+  // Enter cierra el panel de la clave (en horizontal es un panel flotante sobre el control).
+  campoClave.addEventListener('keydown', (evento) => {
+    if (evento.key === 'Enter') { $('ajustes').open = false; campoClave.blur(); }
+  });
+  $('claveListo').addEventListener('click', () => { $('ajustes').open = false; });
   $('ajustes').open = !obtenerClave();
 }
 

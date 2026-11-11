@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Outfit:wght@400;500;600;700&family=Orbitron:wght@600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-<link href="css/estilos.css" rel="stylesheet">
+<link href="css/estilos.css?v=2026-11-11a" rel="stylesheet">
 <script type="module" src="js/main.js"></script>
 </head>
 <body>
@@ -55,102 +55,87 @@
 </header>
 
 <main class="container-xl">
-  <section aria-labelledby="tituloConexion" class="mb-3">
-    <h2 id="tituloConexion" class="visually-hidden">Estado de conexión</h2>
-    <ul class="row row-cols-3 g-2 list-unstyled mb-1">
-      <li class="col"><div class="indicador" id="ind-ws" data-tono="neutro">
-        <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-ws"/></svg>
-        <span class="ind-nombre">WebSocket WSS</span>
-        <span class="ind-estado"><span id="ind-ws-icono"></span><span id="ind-ws-estado" role="status">Desconectado</span></span>
-      </div></li>
-      <li class="col"><div class="indicador" id="ind-api" data-tono="neutro">
-        <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-nube"/></svg>
-        <span class="ind-nombre">Servidor AWS · API de 21 servicios</span>
-        <span class="ind-estado"><span id="ind-api-icono"></span><span id="ind-api-estado" role="status">Comprobando…</span></span>
-      </div></li>
-      <li class="col"><div class="indicador" id="ind-rds" data-tono="neutro">
-        <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-bd"/></svg>
-        <span class="ind-nombre">Amazon RDS</span>
-        <span class="ind-estado"><span id="ind-rds-icono"></span><span id="ind-rds-estado" role="status">Sin verificar</span></span>
-      </div></li>
-    </ul>
-    <p class="nota nota-conexion mb-0">Estos estados no confirman que el vehículo físico esté conectado.</p>
-  </section>
+  <section class="remoto" id="zonaControl" aria-labelledby="tituloMando" tabindex="-1">
+    <h2 id="tituloMando" class="visually-hidden">Control remoto del vehículo</h2>
+    <div class="remoto-cuerpo" id="mando">
 
-  <details class="tarjeta mb-3" id="ajustes">
-    <summary><svg class="ico" aria-hidden="true"><use href="#i-llave"/></svg>Clave de operación</summary>
-    <label class="form-label mt-3" for="clave">Clave de la API (X-API-Key)</label>
-    <input class="form-control" id="clave" type="password" autocomplete="off" spellcheck="false">
-    <p class="nota mt-2 mb-0">Se escribe al operar y queda solo en esta pestaña. No se publica en el repositorio.</p>
-  </details>
+      <section class="remoto-estados" aria-labelledby="tituloConexion">
+        <h3 id="tituloConexion" class="visually-hidden">Estado de conexión</h3>
+        <ul class="estados list-unstyled">
+          <li><div class="indicador" id="ind-ws" data-tono="neutro">
+            <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-ws"/></svg>
+            <span class="ind-nombre">WebSocket WSS</span>
+            <span class="ind-estado"><span id="ind-ws-icono"></span><span id="ind-ws-estado" role="status">Desconectado</span></span>
+          </div></li>
+          <li><div class="indicador" id="ind-api" data-tono="neutro">
+            <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-nube"/></svg>
+            <span class="ind-nombre">Servidor AWS · API de 21 servicios</span>
+            <span class="ind-estado"><span id="ind-api-icono"></span><span id="ind-api-estado" role="status">Comprobando…</span></span>
+          </div></li>
+          <li><div class="indicador" id="ind-rds" data-tono="neutro">
+            <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-bd"/></svg>
+            <span class="ind-nombre">Amazon RDS</span>
+            <span class="ind-estado"><span id="ind-rds-icono"></span><span id="ind-rds-estado" role="status">Sin verificar</span></span>
+          </div></li>
+        </ul>
+        <p class="nota nota-conexion mb-0">Estos estados no confirman que el vehículo físico esté conectado.</p>
+      </section>
 
-  <div class="alert alerta-carga d-flex flex-wrap align-items-center gap-2" id="alertaCarga" role="alert" hidden>
-    <span id="alertaCargaTexto" class="flex-grow-1"></span>
-    <button type="button" class="btn boton-secundario" id="reintentarCarga">Reintentar</button>
-  </div>
+      <div class="remoto-izq zona-joystick">
+        <div class="joystick" id="joystick" role="group" aria-label="Joystick del vehículo. Usa las flechas del teclado y suelta para detener." aria-disabled="true" data-direccion="neutral">
+          <span class="dir dir-adelante" id="dir-adelante" data-vacio="true">—</span>
+          <span class="dir dir-atras" id="dir-atras" data-vacio="true">—</span>
+          <span class="dir dir-izquierda" id="dir-izquierda" data-vacio="true">—</span>
+          <span class="dir dir-derecha" id="dir-derecha" data-vacio="true">—</span>
+          <span class="joystick-centro" aria-hidden="true"></span>
+          <span class="perilla" id="perilla" aria-hidden="true"></span>
+        </div>
+        <p class="nota text-center mb-0" id="joystickNota"></p>
+        <button type="button" class="boton-detener" id="detener" disabled>
+          <svg class="ico" aria-hidden="true"><use href="#i-parar"/></svg>DETENER
+        </button>
+      </div>
 
-  <div class="row g-3 distribucion">
-    <div class="col-12 col-lg-7 columna-control">
-      <section class="tarjeta" id="zonaControl" aria-labelledby="tituloMando" tabindex="-1">
-        <h2 id="tituloMando"><svg class="ico" aria-hidden="true"><use href="#i-mando"/></svg>Controles</h2>
-        <div class="mando" id="mando">
-          <div class="mando-principal">
-            <div class="zona-joystick">
-              <div class="joystick" id="joystick" role="group" aria-label="Joystick del vehículo. Usa las flechas del teclado y suelta para detener." aria-disabled="true" data-direccion="neutral">
-                <span class="dir dir-adelante" id="dir-adelante" data-vacio="true">—</span>
-                <span class="dir dir-atras" id="dir-atras" data-vacio="true">—</span>
-                <span class="dir dir-izquierda" id="dir-izquierda" data-vacio="true">—</span>
-                <span class="dir dir-derecha" id="dir-derecha" data-vacio="true">—</span>
-                <span class="joystick-centro" aria-hidden="true"></span>
-                <span class="perilla" id="perilla" aria-hidden="true"></span>
-              </div>
-              <p class="nota text-center mt-2 mb-2" id="joystickNota"></p>
-              <button type="button" class="boton-detener" id="detener" disabled>
-                <svg class="ico" aria-hidden="true"><use href="#i-parar"/></svg>DETENER
+      <div class="remoto-centro">
+        <div class="alert alerta-carga" id="alertaCarga" role="alert" hidden>
+          <span id="alertaCargaTexto"></span>
+          <button type="button" class="btn boton-secundario" id="reintentarCarga">Reintentar</button>
+        </div>
+
+        <div class="funciones" id="mandoFunciones" role="group" aria-label="Funciones" hidden></div>
+
+        <details class="clave" id="ajustes">
+          <summary><svg class="ico" aria-hidden="true"><use href="#i-llave"/></svg><span>Clave de operación</span></summary>
+          <div class="clave-panel">
+            <label class="form-label" for="clave">Clave de la API (X-API-Key)</label>
+            <input class="form-control" id="clave" type="password" autocomplete="off" spellcheck="false" enterkeyhint="done">
+            <p class="nota mt-2 mb-2">Se escribe al operar y queda solo en esta pestaña. No se publica en el repositorio.</p>
+            <button type="button" class="btn boton-principal w-100" id="claveListo">Listo</button>
+          </div>
+        </details>
+
+        <section class="remoto-demo" aria-labelledby="tituloDemo">
+          <h3 id="tituloDemo">Secuencia DEMO</h3>
+          <label class="visually-hidden" for="demoSelector">Elige una DEMO del vehículo</label>
+          <div class="demo-fila">
+            <select class="form-select" id="demoSelector" disabled><option value="">Cargando…</option></select>
+            <div class="demo-botones">
+              <button type="button" class="btn boton-principal" id="demoIniciar" disabled>
+                <svg class="ico" aria-hidden="true"><use href="#i-jugar"/></svg><span class="btn-texto">Ejecutar</span>
+              </button>
+              <button type="button" class="btn boton-secundario" id="demoCancelar" disabled>
+                <svg class="ico" aria-hidden="true"><use href="#i-parar"/></svg><span class="btn-texto">Cancelar</span>
               </button>
             </div>
-            <div class="grupos" id="mandoGrupos"></div>
           </div>
-          <div class="funciones" id="mandoFunciones" role="group" aria-label="Funciones" hidden></div>
-        </div>
-      </section>
-    </div>
-
-    <div class="col-12 col-lg-5 columna-resto">
-      <div class="row g-3">
-        <div class="col-12">
-          <section class="tarjeta h-100" aria-labelledby="tituloDemo">
-            <h2 id="tituloDemo">Secuencia DEMO</h2>
-            <label class="visually-hidden" for="demoSelector">Elige una DEMO del vehículo</label>
-            <div class="demo-fila">
-              <select class="form-select" id="demoSelector" disabled><option value="">Cargando…</option></select>
-              <div class="demo-botones">
-                <button type="button" class="btn boton-principal" id="demoIniciar" disabled>
-                  <svg class="ico" aria-hidden="true"><use href="#i-jugar"/></svg>Ejecutar
-                </button>
-                <button type="button" class="btn boton-secundario" id="demoCancelar" disabled>
-                  <svg class="ico" aria-hidden="true"><use href="#i-parar"/></svg>Cancelar
-                </button>
-              </div>
-            </div>
-            <p class="texto-suave mt-2 mb-1" id="demoEstado" role="status"></p>
-            <div class="progress demo-barra" id="demoBarra" role="progressbar" aria-label="Avance de la DEMO" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div class="progress-bar"></div></div>
-          </section>
-        </div>
-        <!--<div class="col-12">
-          <section class="tarjeta h-100" aria-labelledby="tituloTraza">
-            <h2 id="tituloTraza">Última acción</h2>
-            <p class="traza-comando" id="trazaComando" aria-live="polite"></p>
-            <ol class="traza-pasos" id="trazaPasos"></ol>
-            <p class="traza-error" id="trazaError" role="alert" hidden></p>
-            <p class="nota mb-1 mt-2">Último evento WebSocket:</p>
-            <p class="traza-evento" id="trazaEvento">Aún no se reciben eventos.</p>
-            <p class="nota mb-0">Un evento confirma que el backend lo publicó, no que los motores se movieron.</p>
-          </section>
-        </div> -->
+          <p class="texto-suave mt-1 mb-0" id="demoEstado" role="status"></p>
+          <div class="progress demo-barra mt-1" id="demoBarra" role="progressbar" aria-label="Avance de la DEMO" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div class="progress-bar"></div></div>
+        </section>
       </div>
+
+      <div class="remoto-der grupos" id="mandoGrupos"></div>
     </div>
-  </div>
+  </section>
 </main>
 
 <footer class="pie container-xl"><p class="mb-0" id="creditos"></p></footer>
