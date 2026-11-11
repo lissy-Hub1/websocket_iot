@@ -1,25 +1,15 @@
-# Entorno virtual y secretos
-.venv/
-venv/
+# Secretos (la clave de la API nunca se publica)
 .env
 *.env
-!.env.example
 
-# Cachés de Python
+# Restos locales de cuando este repo tenía la API
+venv/
+.venv/
 __pycache__/
-*.py[cod]
-.pytest_cache/
-.mypy_cache/
 
 # Editor / sistema
 .vscode/
 .idea/
 .DS_Store
 __MACOSX/
-
-# Logs
 *.log
-
-# Llaves y certificados
-*.pem
-*.key

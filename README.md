@@ -1,160 +1,121 @@
-# API IoT – Vehículo (Examen 2.6 · desplegada en AWS)
+# Aplicación de CONTROL para vehículo IoT (práctica 4.1)
 
-API pública en **Python + FastAPI** (programación orientada a objetos) sobre la base `vehiculo_iot` de **Amazon RDS**.
-Usa los **21 Stored Procedures** del esquema, GET/POST, **WebSocket** por vehículo y ejecución de **DEMO**.
-Corre en **Amazon EC2** detrás de **Caddy (HTTPS/WSS automático)** y usa **Amazon RDS for MySQL**.
-
-* Swagger UI: **https://TU_DOMINIO/docs**
-* WebSocket: **wss://TU_DOMINIO/ws/vehiculos/{id_vehiculo}**
-* Repositorio: **https://github.com/TU_USUARIO/TU_REPO**
+Frontend Mobile First publicado en GitHub Pages: https://lissy-hub1.github.io/websocket_iot/
+La API (FastAPI en AWS) está en su propio repositorio: https://github.com/lissy-Hub1/websocket_iot_aws Controla el vehículo con joystick, botones y DEMO
+consumiendo la API FastAPI ya desplegada en AWS. No incluye monitoreo, CRUD ni control físico del ESP.
 
 ```
-Thunder Client / Swagger  →  HTTPS/WSS (Caddy, 443)  →  FastAPI en EC2 (127.0.0.1:8000)  →  Stored Procedures  →  Amazon RDS (3306, solo desde el SG de EC2)
+GitHub Pages → Fetch/async-await → API REST en AWS (FastAPI) → Amazon RDS
+                                          └→ evento WebSocket (WSS) → esta app + cliente externo
 ```
-
-## Aplicación de CONTROL (práctica 4.1)
-
-El frontend publicado en GitHub Pages está en [`docs/`](docs/README.md). Para que pueda llamar a esta API, define `CORS_ORIGINS` en `.env` con el origen de Pages.
-
-## Reglas de negocio
-
-| Flujo | Qué hace | Historial |
-|---|---|---|
-| **Movimiento individual** `POST /vehiculos/{id}/movimientos` | Valida → `sp_actualizar_estado` + `sp_registrar_historial` en **una transacción** → COMMIT → evento WebSocket `movimiento` | **Sí** |
-| **DEMO** `POST /vehiculos/{id}/demos/{id_demo}/iniciar` | `sp_obtener_movimientos_demo` → N eventos WebSocket ordenados y temporizados → `sp_actualizar_estado` por movimiento | **No** (nunca llama a `sp_registrar_historial`) |
-
-* `GET /vehiculos/{id}/historial` devuelve **como máximo 10** movimientos individuales (del más reciente al más antiguo). El historial completo queda en RDS.
-* `conectado` **no** se vuelve verdadero por recibir un POST: se conserva el valor real de `estado_vehiculo`.
-* Un POST rechazado no cambia estado ni historial y no emite eventos.
-* Solo una DEMO por vehículo a la vez (`409` si ya hay una). Se puede cancelar.
-* Los GET nunca modifican datos.
 
 ## Estructura
 
 ```
-main.py                     # app FastAPI, manejo de errores, lifespan
-config.py                   # Settings desde variables de entorno
-security.py                 # X-API-Key para control y eliminación
-dependencies.py             # Contenedor que crea y comparte los objetos
-exceptions.py               # Errores de negocio -> códigos HTTP
-database/
-  connection.py             # Database: conexión a RDS + transacción (commit/rollback/cierre)
-  procedures.py             # StoredProcedures: CALL con parámetros enlazados + lista blanca de los 21 SP
-repositories/               # SOLO acceso a SP (sin reglas de negocio)
-services/                   # Reglas de negocio (vehículos, comandos, estado, historial, movimientos, demos)
-  demo_runner.py            # Ejecuta/cancela DEMO de forma asíncrona
-websocket/websocket_manager.py   # ConnectionManager: clientes por vehículo
-models/                     # Modelos Pydantic de entrada/salida y eventos WebSocket
-routers/                    # Endpoints HTTP y WebSocket (delgados)
+docs/
+  index.html            HTML semántico y referencias relativas (compatibles con subruta de Pages)
+  css/estilos.css       Paleta pastel/neón y diseño Mobile First sobre Bootstrap 5
+  img/                  Favicon propio (SVG y PNG)
+  js/
+    config.js           URL base, id del vehículo, créditos, tiempos y rutas de la API
+    main.js             Arranque: conecta interfaz, dominio y conexiones
+    api/cliente.js      Fetch centralizado: encabezados, timeout, errores y JSON
+    api/vehiculo.js     Operaciones de la API y validación de lo recibido
+    api/sesion.js       Clave de operación, solo en la pestaña (sessionStorage)
+    conexion/websocket.js  Sesión WSS, latido y reconexión
+    conexion/salud.js   Comprobación periódica de API y RDS
+    dominio/catalogo.js Reparte el catálogo real entre joystick, DETENER y botones
+    dominio/control.js  Servicio único de comandos: cola, duplicados y prioridad de DETENER
+    dominio/demos.js    Ciclo de vida de una DEMO
+    ui/                 joystick, controles, indicadores, avisos y componentes
+    utilidades/errores.js  ApiError y mensajes para el operador
+pruebas_frontend/       Pruebas de reglas con Node (no se publican)
 ```
 
-## Despliegue en EC2
-* **Windows Server:** [DESPLIEGUE_WINDOWS.md](DESPLIEGUE_WINDOWS.md) y `deploy/windows/` (tareas programadas + Caddy).
-* **Linux:** [DESPLIEGUE_EC2.md](DESPLIEGUE_EC2.md) y `deploy/` (systemd + Caddy).
-La API corre con **un solo worker** porque el `ConnectionManager` y las DEMO en curso viven en memoria.
+## Configuración
 
-## Ejecución local (desarrollo)
+Edita `docs/js/config.js`:
+
+| Campo | Valor |
+|---|---|
+| `API_BASE_URL` | URL HTTPS de tu API, sin diagonal final |
+| `VEHICLE_ID` | Id de tu vehículo de prueba |
+| `ALUMNO`, `ANIO` | Texto de los créditos del pie |
+
+En el servidor de AWS agrega a `.env` el origen autorizado y reinicia la API (solo esquema y dominio):
+
+```
+CORS_ORIGINS=https://TU_USUARIO.github.io
+```
+
+## Ejecución local
 
 ```bash
-python -m venv .venv
-# Windows:  .venv\Scripts\activate        macOS/Linux:  source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env        # (Windows: copy .env.example .env) y completa los valores
-python -m uvicorn main:app --reload --port 8000
+python3 -m http.server 5500 --directory docs
 ```
 
-* Swagger UI: <http://localhost:8000/docs>
-* En desarrollo local, el Security Group de RDS debe permitir 3306 desde **My IP** (en producción, solo desde el SG de la instancia EC2).
-* `.env` está en `.gitignore`: nunca lo subas a GitHub.
+Abre `http://localhost:5500`. Para llamar a la API desde ahí, agrega ese origen a `CORS_ORIGINS`.
 
-### Autenticación
-Las operaciones de **control y eliminación** requieren el encabezado `X-API-Key: <valor de API_KEY en .env>`
-(movimientos, iniciar/cancelar DEMO y todos los `/eliminar`). Sin encabezado → `401`; clave incorrecta → `403`.
+Pruebas de las reglas de comandos:
 
-## Endpoints HTTP y SP (todos documentados también en Swagger)
-
-| Método y ruta | Stored Procedures |
-|---|---|
-| `GET /vehiculos` | sp_obtener_vehiculos |
-| `GET /vehiculos/{id}` | sp_obtener_vehiculo, sp_obtener_comandos_vehiculo, sp_obtener_estado, sp_obtener_demos |
-| `POST /vehiculos` | sp_crear_vehiculo |
-| `POST /vehiculos/{id}/actualizar` | sp_actualizar_vehiculo |
-| `POST /vehiculos/{id}/eliminar` 🔒 | sp_eliminar_vehiculo |
-| `GET /vehiculos/{id}/comandos` | sp_obtener_comandos_vehiculo |
-| `POST /vehiculos/{id}/comandos` | sp_crear_comando |
-| `POST /vehiculos/{id}/comandos/{id_comando}/actualizar` | sp_actualizar_comando |
-| `POST /vehiculos/{id}/comandos/{id_comando}/eliminar` 🔒 | sp_eliminar_comando |
-| `GET /vehiculos/{id}/estado` | sp_obtener_estado |
-| `POST /vehiculos/{id}/movimientos` 🔒 | sp_obtener_estado, sp_actualizar_estado, sp_registrar_historial |
-| `GET /vehiculos/{id}/historial?limite=10` | sp_obtener_historial |
-| `GET /vehiculos/{id}/demos` | sp_obtener_demos |
-| `POST /vehiculos/{id}/demos` | sp_crear_demo |
-| `POST /vehiculos/{id}/demos/{id_demo}/actualizar` | sp_actualizar_demo |
-| `POST /vehiculos/{id}/demos/{id_demo}/eliminar` 🔒 | sp_eliminar_demo |
-| `GET /vehiculos/{id}/demos/{id_demo}/movimientos` | sp_obtener_movimientos_demo |
-| `POST /vehiculos/{id}/demos/{id_demo}/movimientos` | sp_agregar_movimiento_demo |
-| `POST .../movimientos/{id_demo_movimiento}/actualizar` | sp_actualizar_movimiento_demo |
-| `POST .../movimientos/{id_demo_movimiento}/eliminar` 🔒 | sp_eliminar_movimiento_demo |
-| `POST /vehiculos/{id}/demos/{id_demo}/iniciar` 🔒 (202) | sp_obtener_movimientos_demo, sp_actualizar_estado |
-| `POST /vehiculos/{id}/demos/cancelar` 🔒 | sp_actualizar_estado (paro seguro, si existe el comando `DETENER`) |
-
-🔒 = requiere `X-API-Key`.
-
-### Cuerpo del POST de movimiento
-```json
-{ "id_comando": 1, "origen": "MANUAL" }
+```bash
+node --test pruebas_frontend/control.test.mjs
 ```
-También se acepta `{ "codigo": 1 }` en lugar de `id_comando` (indica exactamente uno de los dos). `origen` es opcional (por defecto `MANUAL`).
 
-## WebSocket
+## Publicación en GitHub Pages
 
-**URL pública:** `wss://TU_DOMINIO/ws/vehiculos/{id_vehiculo}`  (p. ej. `wss://TU_DOMINIO/ws/vehiculos/1`)
-**URL local (desarrollo):** `ws://localhost:8000/ws/vehiculos/{id_vehiculo}`
+1. Sube el repositorio a GitHub.
+2. En **Settings → Pages**, elige **Deploy from a branch**, tu rama y la carpeta **/docs**.
+3. Abre `https://TU_USUARIO.github.io/NOMBRE_DEL_REPO/` en computadora y en un teléfono real.
 
-* Al conectarse envía el último estado (`estado_inicial`).
-* Varios clientes pueden monitorear el mismo vehículo; cada cliente recibe solo eventos de **su** vehículo.
-* Si el vehículo no existe se cierra con código `4404`; si RDS no está disponible, con `1013`.
-* El cliente puede enviar el texto `ping` y recibe `pong`.
+## Puntos de integración con la API
 
-Todos los mensajes llevan `tipo`, `id_vehiculo`, `timestamp` (UTC, ISO 8601) y, cuando aplica, `comando` y `codigo`.
-
-| `tipo` | Cuándo | Campos extra |
+| Acción | Operación | Clave |
 |---|---|---|
-| `estado_inicial` | Al abrir la conexión | `id_comando`, `conectado` (`comando`/`codigo` ausentes si no hay estado) |
-| `movimiento` | Tras un POST individual confirmado en RDS | `id_comando`, `origen`, `conectado` |
-| `demo_inicio` | Arranca una DEMO | `id_demo`, `total` (N) |
-| `demo_movimiento` | Cada movimiento de la DEMO | `id_demo`, `orden`, `indice`, `total`, `duracion_ms`, `pausa_ms`, `id_comando` |
-| `demo_fin` | Terminó la DEMO | `id_demo`, `total` |
-| `demo_cancelada` | Se canceló la DEMO | `id_demo`, `total` |
-| `demo_error` | Falla de datos/RDS durante la DEMO | `id_demo`, `detalle` |
+| Vehículo, comandos y DEMO | `GET /vehiculos/{id}` | No |
+| Movimiento y DETENER | `POST /vehiculos/{id}/movimientos` con `{id_comando, origen}` | Sí |
+| Duración de la DEMO elegida | `GET /vehiculos/{id}/demos/{id_demo}/movimientos` | No |
+| Iniciar DEMO | `POST /vehiculos/{id}/demos/{id_demo}/iniciar` (202) | Sí |
+| Cancelar DEMO | `POST /vehiculos/{id}/demos/cancelar` | Sí |
+| Eventos | `WSS /ws/vehiculos/{id}` | No |
 
-Ejemplos:
-```json
-{"tipo":"estado_inicial","id_vehiculo":1,"comando":"ADELANTE","codigo":1,"timestamp":"2026-10-14T18:12:30Z","id_comando":1,"conectado":false}
-{"tipo":"movimiento","id_vehiculo":1,"comando":"ADELANTE","codigo":1,"timestamp":"2026-10-14T18:12:31Z","id_comando":1,"origen":"WEB","conectado":false}
-{"tipo":"demo_inicio","id_vehiculo":1,"timestamp":"...","id_demo":1,"total":4}
-{"tipo":"demo_movimiento","id_vehiculo":1,"comando":"ADELANTE","codigo":1,"timestamp":"...","id_comando":1,"id_demo":1,"orden":1,"indice":1,"total":4,"duracion_ms":300,"pausa_ms":100}
-{"tipo":"demo_fin","id_vehiculo":1,"timestamp":"...","id_demo":1,"total":4}
-```
+### Cómo se calculan los tres indicadores
 
-> Enviar un mensaje **no** significa ejecución física confirmada: la confirmación del ESP8266/ESP32 llegará en una práctica posterior.
+| Indicador | Evidencia | Qué NO demuestra |
+|---|---|---|
+| WebSocket WSS | Apertura, cierre, error y latido `ping`/`pong` de la sesión de este navegador | Que el vehículo físico esté conectado |
+| Servidor AWS · API de 21 servicios | `GET /openapi.json` cada 30 s, con timeout de 5 s | Que funcionen las 21 operaciones |
+| Amazon RDS | `GET /vehiculos/{id}/estado`: 200 = respondió; 503 = el código documentado de RDS caído; otro resultado o API caída = «Sin verificar» | Más allá de esa consulta puntual |
 
-### Cancelación y paro seguro
-`POST /vehiculos/{id}/demos/cancelar` cancela la tarea de inmediato (no se emite ningún movimiento posterior) y envía `demo_cancelada`.
-Si el catálogo del vehículo tiene un comando activo llamado **`DETENER`**, se deja como último comando con `sp_actualizar_estado`
-(también ante un error). Nunca se escribe en el historial.
+La API no tiene una ruta de salud ni un diagnóstico dedicado de RDS, y no se inventó ninguno. Para mostrar
+siempre «Sin verificar» en RDS, pon `diagnosticoRds: null` en `RUTAS` de `config.js`.
 
-## Pruebas en Thunder Client (los 3 escenarios del examen, contra el servicio público)
+## Seguridad
 
-Variable sugerida: `API_KEY` y encabezado `X-API-Key: {{API_KEY}}` en los POST protegidos.
+- `X-API-Key` protege los comandos. La escribe la persona que opera y queda solo en esa pestaña; **nunca** va en el repositorio.
+- Quien tenga la URL de Pages no puede mover el vehículo sin esa clave. CORS no es autenticación.
+- Solo HTTPS/WSS desde Pages: la app avisa si la configuración causaría contenido mixto.
+- Los datos remotos se validan y se muestran con `textContent`. El navegador nunca se conecta a MySQL/RDS.
 
-1. **POST** `https://TU_DOMINIO/vehiculos/1/movimientos` — Body JSON `{"id_comando": 1, "origen": "MANUAL"}` → `201`.
-   Verifica en MySQL: `select * from estado_vehiculo;` y `select * from historial_comandos order by id_historial desc limit 5;`
-2. **GET** `https://TU_DOMINIO/vehiculos/1/historial` → máximo 10 movimientos, del más reciente al más antiguo.
-   Comprueba el límite con `select count(*) from historial_comandos where id_vehiculo=1;` (si hay más de 10, la API devuelve 10).
-3. **WebSocket** `wss://TU_DOMINIO/ws/vehiculos/1` → conecta, y desde otra pestaña haz **POST**
-   `https://TU_DOMINIO/vehiculos/1/demos/1/iniciar` (con `X-API-Key`). Verás `demo_inicio`, N × `demo_movimiento`, `demo_fin`.
-   Compara `select count(*) from historial_comandos;` antes y después: **no cambia**.
+## Reglas de control
 
-## Códigos HTTP usados
-200, 201, 202 (DEMO iniciada), 400, 401, 403, 404 (no existe), 409 (conflicto/regla), 422 (validación), 500, 503 (RDS no disponible).
+- **Sin ráfagas:** el joystick envía solo al cambiar de dirección y hay un movimiento en vuelo a la vez; de la cola queda el más reciente.
+- **DETENER primero:** vacía la cola y sale de inmediato, aun durante una DEMO (también la cancela) o con una solicitud pendiente. Atajo: tecla `Esc`.
+- **Respuestas tardías:** no reactivan la interfaz. Si el backend registró el comando anterior después de DETENER (según `fecha_hora`), DETENER se repite una vez.
+- **DEMO:** la secuencia y sus tiempos los ejecuta el backend. Mientras corre se bloquean joystick y botones, pero no DETENER ni cancelar.
+- **Evidencia:** «Solicitado», «Aceptado por API» y «Evento recibido» se marcan por separado. Ninguno prueba que los motores se movieron.
+
+## Pruebas funcionales y evidencias
+
+Abre además un cliente WebSocket independiente (Postman, Thunder Client o extensión de Chrome) en
+`wss://TU_DOMINIO/ws/vehiculos/{id}`. Debe recibir `estado_inicial` al conectarse.
+
+| Prueba | Pasos | Resultado esperado en el cliente externo |
+|---|---|---|
+| A. Movimiento | Desde el teléfono, empuja el joystick hacia avanzar | POST 201 y evento `movimiento` con el mismo vehículo, comando y código |
+| B. Cambio y detención | Cambia de dirección sin soltar y luego suelta | Un evento por dirección y uno de DETENER, sin duplicados por arrastre |
+| C. DEMO | Elige una DEMO e iníciala; repite y cancélala | `demo_inicio`, N × `demo_movimiento` en orden, y `demo_fin` o `demo_cancelada` |
+| D. Indicadores | Corta y recupera la red o reinicia la API | WebSocket y API cambian por separado; RDS muestra su diagnóstico o «Sin verificar» |
+| E. Responsividad | URL publicada en vertical, horizontal y escritorio | Sin desbordes; controles visibles y funcionales |
+
+Los movimientos de una DEMO no deben aparecer en `GET /vehiculos/{id}/historial`.
