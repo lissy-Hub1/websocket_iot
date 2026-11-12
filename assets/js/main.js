@@ -113,6 +113,8 @@ function refrescar() {
   pintarEstadoDemo(faseDemo, { puedeIniciar: listo && !joystick.activo() });
   $('detener').disabled = !catalogo?.detener;
   $('zonaControl').dataset.demo = String(hayDemo);
+  $('demoAbrirTexto').textContent = hayDemo ? 'En curso' : 'Demo';
+  $('demoAbrir').setAttribute('aria-label', hayDemo ? 'DEMO en curso: ver avance o cancelar' : 'Elegir e iniciar una DEMO');
   $('joystickNota').textContent = hayDemo
     ? 'Joystick bloqueado durante la DEMO. DETENER sigue disponible.'
     : 'Arrastra para mover; al soltar se solicita DETENER.';
@@ -171,20 +173,34 @@ function alRecibirEvento(evento) {
 function enlazarEventos() {
   $('detener').addEventListener('click', oprimirDetener);
   document.addEventListener('keydown', (evento) => {
-    if (evento.key === 'Escape' && navegacion.actual() === 'control' && !$('detener').disabled) $('detener').click();
+    // Con el modal de DEMO abierto, Esc solo lo cierra (no dispara DETENER).
+    if (evento.key === 'Escape' && !$('demoDialogo').open && navegacion.actual() === 'control' && !$('detener').disabled) $('detener').click();
   });
   $('demoIniciar').addEventListener('click', async () => {
     const demo = vehiculo?.demos.find((d) => String(d.id) === $('demoSelector').value);
     if (!demo) return;
     const resultado = await demos.iniciar(demo);
     if (resultado.error) avisar('error', mensajeDeError(resultado.error));
-    else if (resultado.ok) avisar('info', 'La API aceptó iniciar la DEMO.');
+    else if (resultado.ok) {
+      avisar('info', 'La API aceptó iniciar la DEMO.');
+      $('demoDialogo').close();
+    }
   });
   $('demoCancelar').addEventListener('click', async () => {
     const resultado = await demos.cancelar();
     if (resultado.error) avisar(resultado.error.status === 404 ? 'info' : 'error', mensajeDeError(resultado.error));
   });
   $('reintentarCarga').addEventListener('click', cargarVehiculo);
+
+  // Modal de DEMO: el botón compacto del mando lo abre; se cierra con ×, Esc o tocando fuera.
+  const dialogo = $('demoDialogo');
+  $('demoAbrir').addEventListener('click', () => {
+    dialogo.showModal();
+    (demos.obtener().fase !== 'libre' ? $('demoCancelar') : $('demoSelector')).focus();
+  });
+  $('demoCerrar').addEventListener('click', () => dialogo.close());
+  dialogo.addEventListener('click', (evento) => { if (evento.target === dialogo) dialogo.close(); });
+  dialogo.addEventListener('close', () => $('demoAbrir').focus());
   $('historialRecargar').addEventListener('click', () => monitoreo.resincronizar());
 }
 

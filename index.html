@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F3EEFF">
+<meta name="theme-color" content="#F7F4FD">
 <meta name="description" content="Aplicación web de control para un vehículo IoT: joystick, comandos y DEMO.">
 <title>Control de vehículo IoT</title>
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-<link href="assets/css/estilos.css?v=2026-11-13b" rel="stylesheet">
+<link href="assets/css/estilos.css?v=2026-11-14c" rel="stylesheet">
 <script type="module" src="assets/js/main.js"></script>
 </head>
 <body>
@@ -66,6 +66,18 @@
   <section class="remoto vista" id="zonaControl" data-vista="control" aria-labelledby="tituloMando" tabindex="-1">
     <h2 id="tituloMando" class="visually-hidden">Control remoto del vehículo</h2>
     <div class="remoto-cuerpo" id="mando">
+      <svg class="silueta" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="sil-cuerpo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F4EEFF"/></linearGradient>
+          <linearGradient id="sil-gatillo" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A78BFA"/><stop offset="1" stop-color="#F472B6"/></linearGradient>
+          <filter id="sil-sombra" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#7C3AED" flood-opacity=".16"/></filter>
+        </defs>
+        <path class="sil-gatillo" d="M120 92 C150 34 232 16 340 30" stroke="url(#sil-gatillo)"/>
+        <path class="sil-gatillo" d="M880 92 C850 34 768 16 660 30" stroke="url(#sil-gatillo)"/>
+        <path class="sil-cuerpo" filter="url(#sil-sombra)" fill="url(#sil-cuerpo)" d="M500 58 C420 58 360 34 270 26 C170 18 96 44 62 112 C25 192 6 330 18 420 C30 495 95 520 150 500 C210 478 250 410 300 375 C350 342 420 336 500 336 C580 336 650 342 700 375 C750 410 790 478 850 500 C905 520 970 495 982 420 C994 330 975 192 938 112 C904 44 830 18 730 26 C640 34 580 58 500 58 Z"/>
+        <path class="sil-linea" d="M500 88 C430 88 370 70 290 62 C200 54 130 76 100 130"/>
+        <path class="sil-linea" d="M500 88 C570 88 630 70 710 62 C800 54 870 76 900 130"/>
+      </svg>
 
       <section class="remoto-estados" aria-labelledby="tituloConexion">
         <h3 id="tituloConexion" class="visually-hidden">Estado de conexión</h3>
@@ -100,7 +112,7 @@
         </div>
         <p class="nota text-center mb-0" id="joystickNota"></p>
         <button type="button" class="boton-detener" id="detener" disabled>
-          <svg class="ico" aria-hidden="true"><use href="#i-parar"/></svg>DETENER
+          <svg class="ico" aria-hidden="true"><use href="#i-parar"/></svg><span>Detener</span>
         </button>
       </div>
 
@@ -110,26 +122,13 @@
           <button type="button" class="btn boton-secundario" id="reintentarCarga">Reintentar</button>
         </div>
 
-        <div class="funciones" id="mandoFunciones" role="group" aria-label="Funciones" hidden></div>
-
-
-        <section class="remoto-demo" aria-labelledby="tituloDemo">
-          <h3 id="tituloDemo">Secuencia DEMO</h3>
-          <label class="visually-hidden" for="demoSelector">Elige una DEMO del vehículo</label>
-          <div class="demo-fila">
-            <select class="form-select" id="demoSelector" disabled><option value="">Cargando…</option></select>
-            <div class="demo-botones">
-              <button type="button" class="btn boton-principal" id="demoIniciar" disabled>
-                <svg class="ico" aria-hidden="true"><use href="#i-jugar"/></svg><span class="btn-texto">Ejecutar</span>
-              </button>
-              <button type="button" class="btn boton-secundario" id="demoCancelar" disabled>
-                <svg class="ico" aria-hidden="true"><use href="#i-parar"/></svg><span class="btn-texto">Cancelar</span>
-              </button>
-            </div>
-          </div>
-          <p class="texto-suave mt-1 mb-0" id="demoEstado" role="status"></p>
-          <div class="progress demo-barra mt-1" id="demoBarra" role="progressbar" aria-label="Avance de la DEMO" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div class="progress-bar"></div></div>
-        </section>
+        <div class="botonera-centro">
+          <div class="funciones" id="mandoFunciones" role="group" aria-label="Funciones" hidden></div>
+          <button type="button" class="m-btn fun-btn demo-abrir" id="demoAbrir" aria-haspopup="dialog" aria-controls="demoDialogo">
+            <span class="m-forma"><svg class="ico" aria-hidden="true"><use href="#i-demo"/></svg></span>
+            <span class="m-texto" id="demoAbrirTexto">Demo</span>
+          </button>
+        </div>
       </div>
 
       <div class="remoto-der grupos" id="mandoGrupos"></div>
@@ -206,6 +205,29 @@
 </main>
 
 <footer class="pie container-xl"><p class="mb-0" id="creditos"></p></footer>
+<dialog class="dialogo" id="demoDialogo" aria-labelledby="tituloDemo">
+<div class="dialogo-contenido">
+  <div class="dialogo-cabecera">
+    <h2 id="tituloDemo"><svg class="ico" aria-hidden="true"><use href="#i-demo"/></svg>Secuencia DEMO</h2>
+    <button type="button" class="dialogo-cerrar" id="demoCerrar" aria-label="Cerrar">
+      <svg class="ico" aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <p class="nota mb-3">La secuencia la ejecuta el backend. DETENER la cancela en cualquier momento.</p>
+  <label class="form-label" for="demoSelector">DEMO del vehículo</label>
+  <select class="form-select" id="demoSelector" disabled><option value="">Cargando…</option></select>
+  <div class="demo-botones">
+    <button type="button" class="btn boton-principal" id="demoIniciar" disabled>
+      <svg class="ico" aria-hidden="true"><use href="#i-jugar"/></svg><span class="btn-texto">Iniciar</span>
+    </button>
+    <button type="button" class="btn boton-secundario" id="demoCancelar" disabled>
+      <svg class="ico" aria-hidden="true"><use href="#i-parar"/></svg><span class="btn-texto">Cancelar</span>
+    </button>
+  </div>
+  <p class="texto-suave mb-0" id="demoEstado" role="status"></p>
+  <div class="progress demo-barra" id="demoBarra" role="progressbar" aria-label="Avance de la DEMO" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div class="progress-bar"></div></div>
+</div>
+</dialog>
 <div id="avisos" class="avisos" aria-live="polite"></div>
 <noscript><p class="alert alerta-carga m-3">Esta aplicación necesita JavaScript para funcionar.</p></noscript>
 </body>
