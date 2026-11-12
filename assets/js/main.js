@@ -113,7 +113,12 @@ function refrescar() {
   pintarEstadoDemo(faseDemo, { puedeIniciar: listo && !joystick.activo() });
   $('detener').disabled = !catalogo?.detener;
   $('zonaControl').dataset.demo = String(hayDemo);
-  $('demoAbrirTexto').textContent = hayDemo ? 'En curso' : 'Demo';
+  // El botón Demo muestra en vivo el comando que la DEMO está ejecutando y su avance.
+  const paso = faseDemo.indice && faseDemo.total ? ` · ${faseDemo.indice}/${faseDemo.total}` : '';
+  $('demoAbrirTexto').textContent = !hayDemo ? 'Demo'
+    : faseDemo.comando ? `${faseDemo.comando}${paso}`
+    : faseDemo.fase === 'cancelando' ? 'Cancelando…' : 'Iniciando…';
+  $('demoAbrirAvance').style.width = hayDemo && faseDemo.total ? `${Math.round((faseDemo.indice / faseDemo.total) * 100)}%` : '0%';
   $('demoAbrir').setAttribute('aria-label', hayDemo ? 'DEMO en curso: ver avance o cancelar' : 'Elegir e iniciar una DEMO');
   $('joystickNota').textContent = hayDemo
     ? 'Joystick bloqueado durante la DEMO. DETENER sigue disponible.'
