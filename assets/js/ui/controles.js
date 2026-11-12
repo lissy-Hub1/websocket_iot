@@ -4,7 +4,7 @@ import { etiquetaCorta, normalizarNombre } from '../dominio/catalogo.js';
 import { $, elemento, icono } from './componentes.js';
 
 const TEXTO_ESTADO = { enviando: 'Enviando…', aceptado: 'Aceptado', recibido: 'Recibido', error: 'Error' };
-function iconoDeComando(nombre) {
+export function iconoDeComando(nombre) {
   const n = normalizarNombre(nombre);
   if (/360/.test(n)) return 'giro-360';
   if (/IZQ|LEFT/.test(n)) return 'giro-izq';
@@ -34,7 +34,7 @@ function botonComando(comando, { clase, nombreIcono, texto, textoDentro = false,
 
 export function pintarMando(catalogo, { alComando }) {
   const laterales = catalogo.grupos.filter((g) => g.id !== 'funciones');
-  $('mandoGrupos').replaceChildren(...laterales.map((grupo) => elemento('div', { class: 'grupo', role: 'group', 'aria-label': grupo.titulo },
+  $('mandoGrupos').replaceChildren(...laterales.map((grupo) => elemento('div', { class: 'grupo', role: 'group', 'aria-label': grupo.titulo, 'data-grupo': grupo.id },
     elemento('p', { class: 'grupo-titulo', 'aria-hidden': 'true' }, grupo.titulo),
     elemento('div', { class: 'grupo-botones' }, grupo.comandos.map((comando) => botonComando(comando, {
       clase: 'par-btn',

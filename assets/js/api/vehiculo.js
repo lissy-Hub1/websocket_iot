@@ -1,4 +1,4 @@
-/* Operaciones de la API que usa CONTROL. Los datos remotos se validan antes de entrar a la app. */
+/* Operaciones de la API que usan CONTROL y MONITOREO. Los datos remotos se validan antes de entrar a la app. */
 import { CONFIG, RUTAS } from '../config.js';
 import { ApiError } from '../utilidades/errores.js';
 import { solicitar } from './cliente.js';
@@ -27,6 +27,33 @@ function normalizarVehiculo(datos) {
 
 export async function obtenerVehiculo() {
   return normalizarVehiculo(await solicitar(RUTAS.vehiculo(ID)));
+}
+
+/* ---- MONITOREO: solo lectura ---- */
+const entero = (v) => (Number.isInteger(v) ? v : null);
+
+/** Último estado guardado (estado_vehiculo). La API responde null si el vehículo aún no tiene estado. */
+export async function obtenerEstado() {
+  const datos = await solicitar(RUTAS.estado(ID));
+  if (datos === null) return null;
+  if (!datos || datos.id_vehiculo !== ID || typeof datos.fecha_actualizacion !== 'string') throw new ApiError('formato');
+  return {
+    idVehiculo: datos.id_vehiculo,
+    vehiculo: texto(datos.vehiculo),
+    idComando: entero(datos.id_comando),
+    comando: texto(datos.comando),
+    codigo: entero(datos.codigo),
+    fecha: datos.fecha_actualizacion,
+  };
+}
+
+/** Últimos movimientos individuales persistidos en RDS (historial_comandos), del más reciente al más antiguo. */
+export async function obtenerHistorial(limite = CONFIG.LIMITE_HISTORIAL) {
+  const datos = await solicitar(RUTAS.historial(ID, limite));
+  if (!datos || datos.id_vehiculo !== ID || !Array.isArray(datos.movimientos)) throw new ApiError('formato');
+  return datos.movimientos
+    .filter((m) => m && esId(m.id_historial) && m.id_vehiculo === ID && typeof m.fecha_hora === 'string')
+    .map((m) => ({ id: m.id_historial, comando: texto(m.comando), codigo: entero(m.codigo), fecha: m.fecha_hora, origen: texto(m.origen) }));
 }
 
 export function registrarMovimiento(comando, { timeoutMs } = {}) {

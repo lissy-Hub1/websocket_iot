@@ -1,17 +1,20 @@
-/* Punto de entrada: conecta interfaz, dominio y conexiones. Aquí no hay reglas de negocio. */
+/* Punto de entrada: conecta interfaz, dominio y conexiones de CONTROL y MONITOREO.
+   Aquí no hay reglas de negocio. Una sola sesión WSS alimenta a las dos vistas. */
 import { CONFIG, problemaDeConfiguracion, urlWebSocket } from './config.js';
-import { guardarClave, obtenerClave } from './api/sesion.js';
 import * as api from './api/vehiculo.js';
 import { crearConexionWs } from './conexion/websocket.js';
 import { crearMonitorSalud } from './conexion/salud.js';
 import { clasificarCatalogo, etiquetaCorta } from './dominio/catalogo.js';
 import { crearControl } from './dominio/control.js';
 import { crearDemos } from './dominio/demos.js';
+import { crearMonitoreo } from './dominio/monitoreo.js';
 import { avisar } from './ui/avisos.js';
 import { $ } from './ui/componentes.js';
 import { pintarDemos, pintarEstadoDemo, pintarEstadoMando, pintarMando } from './ui/controles.js';
 import { pintarSalud, pintarWebSocket } from './ui/indicadores.js';
 import { crearJoystick } from './ui/joystick.js';
+import { pintarHistorial, pintarUltimo } from './ui/monitoreo.js';
+import { crearNavegacion } from './ui/navegacion.js';
 import { mensajeDeError } from './utilidades/errores.js';
 
 const NOMBRES_DIRECCION = { adelante: 'avanzar', atras: 'retroceder', izquierda: 'izquierda', derecha: 'derecha' };
@@ -19,6 +22,41 @@ const NOMBRES_DIRECCION = { adelante: 'avanzar', atras: 'retroceder', izquierda:
 let vehiculo = null;
 let catalogo = null;
 let cargando = false;
+let estadoWs = 'desconectado';
+let wsYaConectada = false;
+let primeraCargaHecha = false;
+
+const monitoreo = crearMonitoreo({
+  obtenerEstado: api.obtenerEstado,
+  obtenerHistorial: api.obtenerHistorial,
+  idVehiculo: CONFIG.VEHICLE_ID,
+  zonaBd: CONFIG.ZONA_HORARIA_BD,
+  limite: CONFIG.LIMITE_HISTORIAL,
+  retrasoHistorialMs: CONFIG.TIEMPOS.SINCRONIZAR_HISTORIAL_MS,
+  alCambiar: pintarVistaMonitoreo,
+});
+
+function pintarVistaMonitoreo(estado = monitoreo.instantanea()) {
+  const opciones = { wsEnLinea: estadoWs === 'en_linea', zona: CONFIG.ZONA_HORARIA_VISTA, nombreVehiculo: vehiculo?.nombre ?? '' };
+  pintarUltimo(estado, opciones);
+  pintarHistorial(estado, { zona: CONFIG.ZONA_HORARIA_VISTA, limite: CONFIG.LIMITE_HISTORIAL });
+}
+
+const navegacion = crearNavegacion({
+  // Al volver a MONITOREO se resincroniza por REST (no hay polling mientras está abierta).
+  alCambiar: (vista) => { if (vista === 'monitoreo' && primeraCargaHecha) monitoreo.resincronizar(); },
+});
+
+/** El indicador WSS se pinta en ambas vistas; tras una reconexión se recupera lo perdido por REST. */
+function alEstadoWs(estado, datos) {
+  estadoWs = estado;
+  pintarWebSocket(estado, datos);
+  if (estado === 'en_linea') {
+    if (wsYaConectada) monitoreo.resincronizar();
+    wsYaConectada = true;
+  }
+  pintarVistaMonitoreo();
+}
 
 const control = crearControl({
   origen: CONFIG.ORIGEN,
@@ -113,6 +151,7 @@ async function cargarVehiculo() {
     catalogo = clasificarCatalogo(vehiculo.comandos);
     pintarVehiculo();
     refrescar();
+    pintarVistaMonitoreo();
   } catch (error) {
     $('vehNombre').textContent = 'Vehículo sin cargar';
     $('alertaCargaTexto').textContent = mensajeDeError(error);
@@ -126,12 +165,13 @@ function alRecibirEvento(evento) {
   if (evento.id_vehiculo !== CONFIG.VEHICLE_ID || typeof evento.tipo !== 'string') return;
   control.registrarEvento(evento);
   demos.procesarEvento(evento);
+  monitoreo.procesarEvento(evento);
 }
 
 function enlazarEventos() {
   $('detener').addEventListener('click', oprimirDetener);
   document.addEventListener('keydown', (evento) => {
-    if (evento.key === 'Escape' && !$('detener').disabled) $('detener').click();
+    if (evento.key === 'Escape' && navegacion.actual() === 'control' && !$('detener').disabled) $('detener').click();
   });
   $('demoIniciar').addEventListener('click', async () => {
     const demo = vehiculo?.demos.find((d) => String(d.id) === $('demoSelector').value);
@@ -145,16 +185,7 @@ function enlazarEventos() {
     if (resultado.error) avisar(resultado.error.status === 404 ? 'info' : 'error', mensajeDeError(resultado.error));
   });
   $('reintentarCarga').addEventListener('click', cargarVehiculo);
-
-  const campoClave = $('clave');
-  campoClave.value = obtenerClave();
-  campoClave.addEventListener('input', () => guardarClave(campoClave.value));
-  // Enter cierra el panel de la clave (en horizontal es un panel flotante sobre el control).
-  campoClave.addEventListener('keydown', (evento) => {
-    if (evento.key === 'Enter') { $('ajustes').open = false; campoClave.blur(); }
-  });
-  $('claveListo').addEventListener('click', () => { $('ajustes').open = false; });
-  $('ajustes').open = !obtenerClave();
+  $('historialRecargar').addEventListener('click', () => monitoreo.resincronizar());
 }
 
 function iniciar() {
@@ -162,11 +193,14 @@ function iniciar() {
   pintarWebSocket('desconectado', {});
   pintarSalud({ api: 'comprobando', rds: 'sin_verificar', verificado: null });
   enlazarEventos();
+  navegacion.iniciar();
   refrescar();
+  pintarVistaMonitoreo();
 
   const problema = problemaDeConfiguracion();
   if (problema) {
     $('vehNombre').textContent = 'Aplicación sin configurar';
+    pintarVistaMonitoreo();
     $('alertaCargaTexto').textContent = problema;
     $('alertaCarga').hidden = false;
     $('reintentarCarga').hidden = true;
@@ -177,7 +211,7 @@ function iniciar() {
   const ws = crearConexionWs({
     url: urlWebSocket(),
     tiempos: CONFIG.TIEMPOS,
-    alEstado: pintarWebSocket,
+    alEstado: alEstadoWs,
     alMensaje: alRecibirEvento,
   });
   const salud = crearMonitorSalud({
@@ -190,11 +224,14 @@ function iniciar() {
       if (estado.recuperada) {
         cargarVehiculo();
         ws.reanudar();
+        if (primeraCargaHecha) monitoreo.resincronizar();
       }
     },
   });
 
   cargarVehiculo();
+  monitoreo.resincronizar(); // carga inicial por REST: último estado + diez movimientos
+  primeraCargaHecha = true;
   ws.abrir();
   salud.iniciar();
 }

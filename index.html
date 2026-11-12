@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#E8E0FF">
+<meta name="theme-color" content="#F3EEFF">
 <meta name="description" content="Aplicación web de control para un vehículo IoT: joystick, comandos y DEMO.">
 <title>Control de vehículo IoT</title>
-<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/img/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Outfit:wght@400;500;600;700&family=Orbitron:wght@600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-<link href="css/estilos.css?v=2026-11-11a" rel="stylesheet">
-<script type="module" src="js/main.js"></script>
+<link href="assets/css/estilos.css?v=2026-11-13b" rel="stylesheet">
+<script type="module" src="assets/js/main.js"></script>
 </head>
 <body>
-<a class="visually-hidden-focusable salto" href="#zonaControl">Saltar a los controles</a>
+<a class="visually-hidden-focusable salto" href="#contenido">Saltar al contenido</a>
 
 <svg width="0" height="0" class="position-absolute" aria-hidden="true">
   <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 10"/></symbol>
@@ -43,39 +43,47 @@
   <symbol id="i-ws" viewBox="0 0 24 24"><path d="M4 9a11 11 0 0 1 16 0M7.5 12.5a6 6 0 0 1 9 0"/><circle cx="12" cy="17" r="1.5"/></symbol>
   <symbol id="i-nube" viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1-.7-8.9 6 6 0 0 1 11.5 1.4A3.8 3.8 0 0 1 17 18z"/></symbol>
   <symbol id="i-bd" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3"/></symbol>
+  <symbol id="i-actividad" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
+  <symbol id="i-lista" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
+  <symbol id="i-recargar" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></symbol>
 </svg>
 
 <header class="encabezado container-xl">
-  <img src="img/favicon.svg" width="44" height="44" alt="" class="encabezado-logo">
+  <img src="assets/img/favicon.svg" width="44" height="44" alt="" class="encabezado-logo">
   <div class="encabezado-texto">
-    <p class="encabezado-sub">Control de vehículo IoT</p>
+    <p class="encabezado-sub">Vehículo IoT</p>
     <h1 id="vehNombre">Cargando vehículo…</h1>
     <p id="vehDetalle" class="texto-suave mb-0"></p>
   </div>
+  <nav class="navegacion" aria-label="Secciones de la aplicación">
+    <a class="nav-enlace" href="#control" data-vista="control"><svg class="ico" aria-hidden="true"><use href="#i-mando"/></svg><span>Control</span></a>
+    <a class="nav-enlace" href="#monitoreo" data-vista="monitoreo"><svg class="ico" aria-hidden="true"><use href="#i-actividad"/></svg><span>Monitoreo</span></a>
+  </nav>
 </header>
 
-<main class="container-xl">
-  <section class="remoto" id="zonaControl" aria-labelledby="tituloMando" tabindex="-1">
+<main class="container-xl" id="contenido">
+  <!-- ===== Vista CONTROL (práctica 4.1) ===== -->
+  <section class="remoto vista" id="zonaControl" data-vista="control" aria-labelledby="tituloMando" tabindex="-1">
     <h2 id="tituloMando" class="visually-hidden">Control remoto del vehículo</h2>
     <div class="remoto-cuerpo" id="mando">
 
       <section class="remoto-estados" aria-labelledby="tituloConexion">
         <h3 id="tituloConexion" class="visually-hidden">Estado de conexión</h3>
         <ul class="estados list-unstyled">
-          <li><div class="indicador" id="ind-ws" data-tono="neutro">
+          <li><div class="indicador" data-indicador="ws" data-tono="neutro">
             <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-ws"/></svg>
             <span class="ind-nombre">WebSocket WSS</span>
-            <span class="ind-estado"><span id="ind-ws-icono"></span><span id="ind-ws-estado" role="status">Desconectado</span></span>
+            <span class="ind-estado"><span class="ind-icono"></span><span class="ind-texto" role="status">Desconectado</span></span>
           </div></li>
-          <li><div class="indicador" id="ind-api" data-tono="neutro">
+          <li><div class="indicador" data-indicador="api" data-tono="neutro">
             <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-nube"/></svg>
             <span class="ind-nombre">Servidor AWS · API de 21 servicios</span>
-            <span class="ind-estado"><span id="ind-api-icono"></span><span id="ind-api-estado" role="status">Comprobando…</span></span>
+            <span class="ind-estado"><span class="ind-icono"></span><span class="ind-texto" role="status">Comprobando…</span></span>
           </div></li>
-          <li><div class="indicador" id="ind-rds" data-tono="neutro">
+          <li><div class="indicador" data-indicador="rds" data-tono="neutro">
             <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-bd"/></svg>
             <span class="ind-nombre">Amazon RDS</span>
-            <span class="ind-estado"><span id="ind-rds-icono"></span><span id="ind-rds-estado" role="status">Sin verificar</span></span>
+            <span class="ind-estado"><span class="ind-icono"></span><span class="ind-texto" role="status">Sin verificar</span></span>
           </div></li>
         </ul>
         <p class="nota nota-conexion mb-0">Estos estados no confirman que el vehículo físico esté conectado.</p>
@@ -104,15 +112,6 @@
 
         <div class="funciones" id="mandoFunciones" role="group" aria-label="Funciones" hidden></div>
 
-        <details class="clave" id="ajustes">
-          <summary><svg class="ico" aria-hidden="true"><use href="#i-llave"/></svg><span>Clave de operación</span></summary>
-          <div class="clave-panel">
-            <label class="form-label" for="clave">Clave de la API (X-API-Key)</label>
-            <input class="form-control" id="clave" type="password" autocomplete="off" spellcheck="false" enterkeyhint="done">
-            <p class="nota mt-2 mb-2">Se escribe al operar y queda solo en esta pestaña. No se publica en el repositorio.</p>
-            <button type="button" class="btn boton-principal w-100" id="claveListo">Listo</button>
-          </div>
-        </details>
 
         <section class="remoto-demo" aria-labelledby="tituloDemo">
           <h3 id="tituloDemo">Secuencia DEMO</h3>
@@ -135,6 +134,74 @@
 
       <div class="remoto-der grupos" id="mandoGrupos"></div>
     </div>
+  </section>
+
+  <!-- ===== Vista MONITOREO (práctica 4.2) ===== -->
+  <section class="monitoreo vista" id="vistaMonitoreo" data-vista="monitoreo" aria-labelledby="tituloMonitoreo" tabindex="-1" hidden>
+    <h2 id="tituloMonitoreo" class="visually-hidden">Monitoreo en tiempo real</h2>
+
+    <section class="mon-tarjeta mon-estados" aria-labelledby="tituloConexionMon">
+      <h3 id="tituloConexionMon" class="visually-hidden">Estado de conexión</h3>
+      <ul class="estados list-unstyled">
+          <li><div class="indicador" data-indicador="ws" data-tono="neutro">
+            <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-ws"/></svg>
+            <span class="ind-nombre">WebSocket WSS</span>
+            <span class="ind-estado"><span class="ind-icono"></span><span class="ind-texto">Desconectado</span></span>
+          </div></li>
+          <li><div class="indicador" data-indicador="api" data-tono="neutro">
+            <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-nube"/></svg>
+            <span class="ind-nombre">Servidor AWS · API de 21 servicios</span>
+            <span class="ind-estado"><span class="ind-icono"></span><span class="ind-texto">Comprobando…</span></span>
+          </div></li>
+          <li><div class="indicador" data-indicador="rds" data-tono="neutro">
+            <svg class="ico ind-tipo" aria-hidden="true"><use href="#i-bd"/></svg>
+            <span class="ind-nombre">Amazon RDS</span>
+            <span class="ind-estado"><span class="ind-icono"></span><span class="ind-texto">Sin verificar</span></span>
+          </div></li>
+      </ul>
+      <p class="nota mb-0">«En línea» es la sesión WSS de este navegador: no confirma que el vehículo físico esté conectado.</p>
+    </section>
+
+    <section class="mon-tarjeta mon-ultimo" id="ultimo" aria-labelledby="tituloUltimo" data-fase="cargando">
+      <header class="mon-cabecera">
+        <h3 id="tituloUltimo" class="mon-titulo"><svg class="ico" aria-hidden="true"><use href="#i-actividad"/></svg>Último movimiento reportado</h3>
+        <span class="chip" id="ultimoFuente">Cargando…</span>
+      </header>
+      <div class="ultimo-cuerpo">
+        <div class="ultimo-icono" id="ultimoIcono" aria-hidden="true"></div>
+        <div class="ultimo-principal">
+          <p class="ultimo-nombre" id="ultimoNombre" aria-live="polite">Cargando…</p>
+          <p class="ultimo-demo" id="ultimoDemo" hidden></p>
+        </div>
+      </div>
+      <dl class="ultimo-datos">
+        <div><dt>Vehículo</dt><dd id="ultimoVehiculo">—</dd></div>
+        <div><dt>Fecha</dt><dd id="ultimoFecha">—</dd></div>
+        <div><dt>Hora</dt><dd id="ultimoHora">—</dd></div>
+        <div><dt>Código</dt><dd id="ultimoCodigo">—</dd></div>
+      </dl>
+      <p class="nota mb-0" id="ultimoNota">Último movimiento reportado por la API o por WebSocket. No confirma que el vehículo lo haya ejecutado físicamente.</p>
+    </section>
+
+    <section class="mon-tarjeta mon-historial" aria-labelledby="tituloHistorial">
+      <header class="mon-cabecera">
+        <h3 id="tituloHistorial" class="mon-titulo"><svg class="ico" aria-hidden="true"><use href="#i-lista"/></svg>Últimos 10 movimientos</h3>
+        <button type="button" class="btn boton-secundario btn-recargar" id="historialRecargar">
+          <svg class="ico" aria-hidden="true"><use href="#i-recargar"/></svg><span>Actualizar</span>
+        </button>
+      </header>
+      <p class="mon-estado-tabla" id="historialEstado" role="status">Cargando movimientos…</p>
+      <div class="tabla-caja">
+        <table class="tabla-mov">
+          <caption class="visually-hidden">Últimos diez movimientos individuales guardados en Amazon RDS, del más reciente al más antiguo</caption>
+          <thead>
+            <tr><th scope="col" class="col-num">#</th><th scope="col">Movimiento</th><th scope="col">Fecha</th><th scope="col">Hora</th><th scope="col" class="col-origen">Origen</th></tr>
+          </thead>
+          <tbody id="historialCuerpo"></tbody>
+        </table>
+      </div>
+      <p class="nota mb-0">Solo movimientos individuales persistidos en RDS y leídos con la API. Los pasos de una DEMO no se guardan en el historial.</p>
+    </section>
   </section>
 </main>
 

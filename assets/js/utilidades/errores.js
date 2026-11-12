@@ -18,15 +18,15 @@ export class ApiError extends Error {
 export function mensajeDeError(error) {
   if (!(error instanceof ApiError)) return 'Ocurrió un error inesperado en la aplicación.';
   switch (error.tipo) {
-    case 'clave': return 'Escribe la clave de operación para enviar comandos.';
+    case 'clave': return 'Falta la clave de la API en config.js.';
     case 'red': return 'No se pudo contactar a la API. Revisa tu conexión o el servidor.';
     case 'timeout': return 'La API tardó demasiado en responder.';
     case 'formato': return 'La API envió una respuesta que no se pudo interpretar.';
     default: break;
   }
   switch (error.status) {
-    case 401: return 'La API pide una clave de operación.';
-    case 403: return 'La clave de operación es incorrecta.';
+    case 401: return 'La API pide una clave y config.js no la envía.';
+    case 403: return 'La clave de config.js no coincide con la del servidor.';
     case 422: return 'La API rechazó los datos enviados.';
     case 503: return 'La API informa que la base de datos no está disponible.';
     default: break;

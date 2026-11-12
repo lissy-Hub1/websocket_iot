@@ -1,5 +1,5 @@
 /* Los tres indicadores independientes: texto + icono + color, nunca solo color. */
-import { $, icono } from './componentes.js';
+import { icono } from './componentes.js';
 
 const VISTA = {
   ws: {
@@ -20,13 +20,15 @@ const VISTA = {
   },
 };
 
+/* El mismo indicador aparece en CONTROL y en MONITOREO: se pintan todas sus copias. */
 function pintar(nombre, estado, detalle) {
   const [texto, tono, nombreIcono] = VISTA[nombre][estado];
-  const caja = $(`ind-${nombre}`);
-  caja.dataset.tono = tono;
-  $(`ind-${nombre}-icono`).replaceChildren(icono(nombreIcono));
-  $(`ind-${nombre}-estado`).textContent = texto;
-  caja.title = detalle || texto;
+  for (const caja of document.querySelectorAll(`[data-indicador="${nombre}"]`)) {
+    caja.dataset.tono = tono;
+    caja.querySelector('.ind-icono').replaceChildren(icono(nombreIcono));
+    caja.querySelector('.ind-texto').textContent = texto;
+    caja.title = detalle || texto;
+  }
 }
 
 export function pintarWebSocket(estado, datos = {}) {
