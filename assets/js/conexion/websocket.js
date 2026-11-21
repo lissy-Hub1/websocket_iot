@@ -1,7 +1,9 @@
-/* Sesión WSS real del navegador. Su estado NO indica que el vehículo físico esté conectado. */
-const NO_REINTENTAR = 4404; // el backend cierra así cuando el vehículo no existe
+/* Sesión WSS real del navegador. Su estado NO indica que el vehículo físico esté conectado.
+   4.3: el primer mensaje autentica el canal con el token de sesión; la API comprueba el permiso sobre la
+   unidad y cierra con 4401 (sesión inválida), 4403 (sin permiso o permiso revocado) o 4404 (no existe). */
+const NO_REINTENTAR = { 4401: 'Tu sesión venció.', 4403: 'Ya no tienes permiso sobre esta unidad.', 4404: 'El servidor no reconoce este vehículo.' };
 
-export function crearConexionWs({ url, tiempos, alEstado, alMensaje, CrearSocket = globalThis.WebSocket }) {
+export function crearConexionWs({ url, tiempos, alEstado, alMensaje, obtenerToken = () => '', alSinPermiso, CrearSocket = globalThis.WebSocket }) {
   let socket = null;
   let intento = 0;
   let detenida = false;
@@ -60,6 +62,7 @@ export function crearConexionWs({ url, tiempos, alEstado, alMensaje, CrearSocket
       return;
     }
     socket.onopen = () => {
+      socket.send(JSON.stringify({ tipo: 'auth', token: obtenerToken() }));
       intento = 0;
       alEstado('en_linea', {});
       iniciarLatido();
@@ -73,10 +76,11 @@ export function crearConexionWs({ url, tiempos, alEstado, alMensaje, CrearSocket
       if (datos && typeof datos === 'object') alMensaje(datos);
     };
     socket.onclose = (evento) => {
-      if (evento.code === NO_REINTENTAR) {
+      if (NO_REINTENTAR[evento.code]) {
         soltarSocket();
         detenida = true;
-        alEstado('desconectado', { motivo: 'El servidor no reconoce este vehículo.' });
+        alEstado('desconectado', { motivo: NO_REINTENTAR[evento.code] });
+        alSinPermiso?.(evento.code);
         return;
       }
       perderSesion();

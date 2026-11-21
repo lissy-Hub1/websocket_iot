@@ -1,13 +1,10 @@
-/* Configuración compartida por CONTROL y MONITOREO. Este archivo se publica tal cual en
-   GitHub Pages: nunca pongas aquí credenciales de RDS/MySQL ni claves de AWS. */
+/* Configuración compartida por CONTROL, MONITOREO y ADMINISTRACIÓN. Este archivo se publica tal cual en
+   GitHub Pages: nunca pongas aquí credenciales de RDS/MySQL, claves de AWS ni la X-API-Key.
+   4.3: ya no hay clave en el navegador. Cada persona inicia sesión con Google (o prueba como Invitado)
+   y la API decide qué unidades puede ver u operar. El Client ID de Google se lee de GET /auth/config. */
 export const CONFIG = Object.freeze({
   // URL base HTTPS de tu API en AWS, sin diagonal final. Ejemplo: 'https://miiot.duckdns.org'
   API_BASE_URL: 'https://miwebiot.duckdns.org',
-  VEHICLE_ID: 1,
-  // Clave X-API-Key que la API exige para mover el vehículo y para iniciar/cancelar DEMO.
-  // Por decisión del proyecto la web ya no la pide: va aquí y, por lo tanto, ES PÚBLICA.
-  // La misma clave protege los /eliminar de la API: cámbiala en el .env del servidor si se filtra.
-  API_KEY: 'veiculo_iot_api_key',
   // Zona horaria en la que RDS guarda fecha_hora/fecha_actualizacion (sin desfase en el JSON)
   // y zona en la que se muestran fecha y hora en MONITOREO.
   ZONA_HORARIA_BD: 'UTC',
@@ -37,12 +34,11 @@ export const CONFIG = Object.freeze({
 
 /* Contrato real de la API (Swagger). Cualquier ruta nueva se agrega aquí, no en los módulos. */
 export const RUTAS = Object.freeze({
-  // No existe una ruta de salud en la API. /openapi.json está documentada, responde sin tocar
-  // la base de datos y por eso solo comprueba que el servidor HTTP atiende.
+  // /openapi.json responde sin tocar la base de datos: solo comprueba que el servidor HTTP atiende.
   saludApi: () => '/openapi.json',
-  // Consulta de solo lectura que ejecuta sp_obtener_estado: 200 demuestra que RDS respondió y
-  // 503 es el código documentado para "RDS no disponible". Pon null para mostrar «Sin verificar».
-  diagnosticoRds: (id) => `/vehiculos/${id}/estado`,
+  // 4.3: diagnóstico real del backend. 200 = RDS ejecutó sp_salud; 503 = RDS no disponible.
+  // Pon null para mostrar siempre «Sin verificar».
+  diagnosticoRds: () => '/salud',
   vehiculo: (id) => `/vehiculos/${id}`,
   estado: (id) => `/vehiculos/${id}/estado`,
   historial: (id, limite) => `/vehiculos/${id}/historial?limite=${limite}`,
@@ -63,6 +59,6 @@ export function problemaDeConfiguracion(protocoloPagina = globalThis.location?.p
   return null;
 }
 
-export function urlWebSocket(id = CONFIG.VEHICLE_ID) {
+export function urlWebSocket(id) {
   return CONFIG.API_BASE_URL.replace(/^http/, 'ws') + RUTAS.websocket(id);
 }

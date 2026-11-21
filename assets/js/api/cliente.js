@@ -1,16 +1,15 @@
 /* Cliente HTTP único: URL base, encabezados, tiempo de espera, errores y lectura de JSON. */
 import { CONFIG } from '../config.js';
 import { ApiError } from '../utilidades/errores.js';
-import { obtenerClave } from './sesion.js';
+import { obtenerToken } from './sesion.js';
 
 export async function solicitar(ruta, { metodo = 'GET', cuerpo, protegido = false, timeoutMs = CONFIG.TIEMPOS.PETICION_MS } = {}) {
   const encabezados = { Accept: 'application/json' };
   if (cuerpo !== undefined) encabezados['Content-Type'] = 'application/json';
-  if (protegido) {
-    const clave = obtenerClave();
-    if (!clave) throw new ApiError('clave');
-    encabezados['X-API-Key'] = clave;
-  }
+  // 4.3: toda petición viaja con la sesión; la API decide si ese token puede ver u operar la unidad.
+  const token = obtenerToken();
+  if (token) encabezados.Authorization = `Bearer ${token}`;
+  else if (protegido) throw new ApiError('clave');
 
   const abortador = new AbortController();
   const temporizador = setTimeout(() => abortador.abort(), timeoutMs);
@@ -38,6 +37,9 @@ export async function solicitar(ruta, { metodo = 'GET', cuerpo, protegido = fals
   }
   if (!respuesta.ok) {
     const detalle = esJson && typeof datos?.detail === 'string' ? datos.detail : null;
+    if (respuesta.status === 401 && token) {
+      globalThis.dispatchEvent?.(new CustomEvent('sesion-vencida', { detail: detalle }));
+    }
     throw new ApiError('http', { status: respuesta.status, detalle });
   }
   if (!esJson) throw new ApiError('formato', { status: respuesta.status });

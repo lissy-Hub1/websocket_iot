@@ -1,7 +1,16 @@
-/* Punto de entrada: conecta interfaz, dominio y conexiones de CONTROL y MONITOREO.
-   Aquí no hay reglas de negocio. Una sola sesión WSS alimenta a las dos vistas. */
+/* Punto de entrada: conecta interfaz, dominio y conexiones de CONTROL, MONITOREO y (4.3) ADMINISTRACIÓN.
+   Aquí no hay reglas de negocio. Una sola sesión WSS alimenta a CONTROL y MONITOREO.
+   4.3: primero se valida la sesión con la API y se arma el menú según el rol; la seguridad real la aplica
+   la API en cada petición y en el WebSocket. */
 import { CONFIG, problemaDeConfiguracion, urlWebSocket } from './config.js';
 import * as api from './api/vehiculo.js';
+import * as plataforma from './api/plataforma.js';
+import { borrarSesion, guardarSesion, guardarUnidad, obtenerSesion, obtenerToken, obtenerUnidad } from './api/sesion.js';
+import { enlazarFormulario } from './ui/formulario.js';
+import { iniciarAcceso } from './vistas/acceso.js';
+import { iniciarAdministracion } from './vistas/administracion.js';
+import { iniciarAvisoInvitado } from './vistas/invitado.js';
+import { iniciarUnidades, listarOperables } from './vistas/unidades.js';
 import { crearConexionWs } from './conexion/websocket.js';
 import { crearMonitorSalud } from './conexion/salud.js';
 import { clasificarCatalogo, etiquetaCorta } from './dominio/catalogo.js';
@@ -17,6 +26,12 @@ import { pintarHistorial, pintarUltimo } from './ui/monitoreo.js';
 import { crearNavegacion } from './ui/navegacion.js';
 import { mensajeDeError } from './utilidades/errores.js';
 
+const UNIDAD = obtenerUnidad();          // unidad elegida (al cambiarla, la app se recarga)
+const ID_UNIDAD = UNIDAD?.id ?? null;
+const LLAVE_MOTIVO = 'iot_motivo';
+const ROLES = { ADMIN: 'Administrador', USUARIO: 'Usuario', INVITADO: 'Prueba temporal' };
+let navegacion = null;
+
 const NOMBRES_DIRECCION = { adelante: 'avanzar', atras: 'retroceder', izquierda: 'izquierda', derecha: 'derecha' };
 
 let vehiculo = null;
@@ -29,7 +44,7 @@ let primeraCargaHecha = false;
 const monitoreo = crearMonitoreo({
   obtenerEstado: api.obtenerEstado,
   obtenerHistorial: api.obtenerHistorial,
-  idVehiculo: CONFIG.VEHICLE_ID,
+  idVehiculo: ID_UNIDAD,
   zonaBd: CONFIG.ZONA_HORARIA_BD,
   limite: CONFIG.LIMITE_HISTORIAL,
   retrasoHistorialMs: CONFIG.TIEMPOS.SINCRONIZAR_HISTORIAL_MS,
@@ -42,10 +57,64 @@ function pintarVistaMonitoreo(estado = monitoreo.instantanea()) {
   pintarHistorial(estado, { zona: CONFIG.ZONA_HORARIA_VISTA, limite: CONFIG.LIMITE_HISTORIAL });
 }
 
-const navegacion = crearNavegacion({
-  // Al volver a MONITOREO se resincroniza por REST (no hay polling mientras está abierta).
-  alCambiar: (vista) => { if (vista === 'monitoreo' && primeraCargaHecha) monitoreo.resincronizar(); },
-});
+/** Al cambiar de vista: MONITOREO se resincroniza por REST; Administración y Mis vehículos se cargan al abrirse. */
+function alCambiarVista(vista) {
+  const operacion = vista === 'control' || vista === 'monitoreo';
+  $('sinUnidad').hidden = !(operacion && ID_UNIDAD == null);
+  if (operacion && ID_UNIDAD == null) {
+    $('zonaControl').hidden = true;
+    $('vistaMonitoreo').hidden = true;
+  }
+  if (vista === 'monitoreo' && primeraCargaHecha) monitoreo.resincronizar();
+  if (vista === 'administracion') iniciarAdministracion();
+  if (vista === 'unidades') iniciarUnidades();
+}
+
+/** Cierra la sesión local y vuelve a ACCESO mostrando el motivo. */
+async function salir(motivo, { avisarApi = false } = {}) {
+  const sesion = obtenerSesion();
+  if (avisarApi && sesion?.token) {
+    try {
+      if (sesion.tipo === 'INVITADO') await plataforma.terminarInvitado();
+      else await plataforma.logout();
+    } catch { /* la sesión ya no era válida */ }
+  }
+  borrarSesion();
+  try { sessionStorage.setItem(LLAVE_MOTIVO, motivo ?? ''); } catch { /* sin almacenamiento */ }
+  location.hash = '#acceso';
+  location.reload();
+}
+
+function pintarCuenta(sesion) {
+  if (!sesion) return;
+  const nombre = sesion.tipo === 'INVITADO' ? 'Invitado' : (sesion.usuario?.nombre || sesion.usuario?.email || '');
+  $('cuenta').hidden = false;
+  $('cuentaAvatar').textContent = nombre.charAt(0).toUpperCase() || '?';
+  $('cuentaNombre').textContent = nombre;
+  $('cuentaNombre').title = sesion.usuario?.email ?? '';
+  $('cuentaRol').textContent = ROLES[sesion.tipo] ?? sesion.tipo;
+  $('cuentaSalir').title = sesion.tipo === 'INVITADO' ? 'Terminar prueba' : 'Cerrar sesión';
+  $('cuentaSalir').addEventListener('click', () => salir(
+    sesion.tipo === 'INVITADO' ? 'Terminaste la prueba. La unidad se detuvo.' : 'Cerraste sesión.', { avisarApi: true }));
+}
+
+/** Pide a la API la cuenta de la sesión guardada. Devuelve la sesión válida o null. */
+async function validarSesion() {
+  const sesion = obtenerSesion();
+  if (!sesion?.token) return null;
+  if (sesion.tipo === 'INVITADO') {
+    try {
+      await plataforma.estadoInvitado();
+      return sesion;
+    } catch { return null; }
+  }
+  try {
+    const usuario = await plataforma.yo();
+    const actualizada = { ...sesion, tipo: usuario.rol, usuario };
+    guardarSesion(actualizada);
+    return actualizada;
+  } catch { return null; }
+}
 
 /** El indicador WSS se pinta en ambas vistas; tras una reconexión se recupera lo perdido por REST. */
 function alEstadoWs(estado, datos) {
@@ -169,7 +238,7 @@ async function cargarVehiculo() {
 }
 
 function alRecibirEvento(evento) {
-  if (evento.id_vehiculo !== CONFIG.VEHICLE_ID || typeof evento.tipo !== 'string') return;
+  if (evento.id_vehiculo !== ID_UNIDAD || typeof evento.tipo !== 'string') return;
   control.registrarEvento(evento);
   demos.procesarEvento(evento);
   monitoreo.procesarEvento(evento);
@@ -179,7 +248,7 @@ function enlazarEventos() {
   $('detener').addEventListener('click', oprimirDetener);
   document.addEventListener('keydown', (evento) => {
     // Con el modal de DEMO abierto, Esc solo lo cierra (no dispara DETENER).
-    if (evento.key === 'Escape' && !$('demoDialogo').open && navegacion.actual() === 'control' && !$('detener').disabled) $('detener').click();
+    if (evento.key === 'Escape' && !$('demoDialogo').open && !$('dlgForm').open && navegacion?.actual() === 'control' && !$('detener').disabled) $('detener').click();
   });
   $('demoIniciar').addEventListener('click', async () => {
     const demo = vehiculo?.demos.find((d) => String(d.id) === $('demoSelector').value);
@@ -209,14 +278,13 @@ function enlazarEventos() {
   $('historialRecargar').addEventListener('click', () => monitoreo.resincronizar());
 }
 
-function iniciar() {
-  $('creditos').textContent = `Desarrollado por ${CONFIG.ALUMNO} · ${CONFIG.ANIO}`;
+function iniciarOperacion(sesion) {
   pintarWebSocket('desconectado', {});
   pintarSalud({ api: 'comprobando', rds: 'sin_verificar', verificado: null });
   enlazarEventos();
-  navegacion.iniciar();
   refrescar();
   pintarVistaMonitoreo();
+  if (sesion.tipo === 'INVITADO') $('demoAbrir').hidden = true; // la prueba de Invitado no incluye DEMO
 
   const problema = problemaDeConfiguracion();
   if (problema) {
@@ -230,10 +298,21 @@ function iniciar() {
   }
 
   const ws = crearConexionWs({
-    url: urlWebSocket(),
+    url: urlWebSocket(ID_UNIDAD),
     tiempos: CONFIG.TIEMPOS,
     alEstado: alEstadoWs,
     alMensaje: alRecibirEvento,
+    obtenerToken,
+    alSinPermiso: (codigo) => {
+      if (codigo === 4401 || sesion.tipo === 'INVITADO') {
+        salir(sesion.tipo === 'INVITADO' ? 'Tu prueba terminó y la unidad se detuvo.' : 'Tu sesión venció. Vuelve a iniciar sesión.');
+      } else if (codigo === 4403) {
+        avisar('error', 'Ya no tienes permiso sobre esta unidad.');
+        guardarUnidad(null);
+        location.hash = '#unidades';
+        setTimeout(() => location.reload(), 1500);
+      }
+    },
   });
   const salud = crearMonitorSalud({
     comprobarApi: api.comprobarApi,
@@ -257,4 +336,61 @@ function iniciar() {
   salud.iniciar();
 }
 
-iniciar();
+async function arrancar() {
+  $('creditos').textContent = `Desarrollado por ${CONFIG.ALUMNO} · ${CONFIG.ANIO}`;
+  enlazarFormulario();
+  let motivo = '';
+  try { motivo = sessionStorage.getItem(LLAVE_MOTIVO) ?? ''; sessionStorage.removeItem(LLAVE_MOTIVO); } catch { /* sin almacenamiento */ }
+
+  const sesion = await validarSesion();
+  if (!sesion) {
+    if (obtenerSesion()) borrarSesion();
+    $('vehNombre').textContent = 'Plataforma de vehículos IoT';
+    $('vehDetalle').textContent = 'Control · Monitoreo · Administración';
+    navegacion = crearNavegacion({ rol: 'ANONIMO', alCambiar: alCambiarVista });
+    navegacion.iniciar();
+    iniciarAcceso({ motivo });
+    return;
+  }
+  // A partir de aquí, cualquier 401 de la API significa que la sesión ya no sirve.
+  globalThis.addEventListener('sesion-vencida', () => salir(sesion.tipo === 'INVITADO'
+    ? 'Tu prueba terminó y la unidad se detuvo.' : 'Tu sesión venció. Vuelve a iniciar sesión.'));
+  pintarCuenta(sesion);
+  if (motivo) avisar('info', motivo);
+
+  // Unidad: el Invitado usa la reservada; si la cuenta opera una sola unidad, se elige sola.
+  if (sesion.tipo === 'INVITADO' && ID_UNIDAD !== sesion.id_vehiculo) {
+    guardarUnidad({ id: sesion.id_vehiculo, nombre: '', serie: '' });
+    location.reload();
+    return;
+  }
+  if (ID_UNIDAD == null && sesion.tipo === 'USUARIO') {
+    try {
+      const operables = await listarOperables();
+      if (operables.length === 1) {
+        guardarUnidad({ id: operables[0].id_vehiculo, nombre: operables[0].nombre, serie: operables[0].numero_serie });
+        location.reload();
+        return;
+      }
+    } catch { /* se queda sin unidad; «Mis vehículos» muestra el motivo */ }
+  }
+
+  navegacion = crearNavegacion({
+    rol: sesion.tipo,
+    predeterminada: ID_UNIDAD != null ? 'control' : (sesion.tipo === 'ADMIN' ? 'administracion' : 'unidades'),
+    alCambiar: alCambiarVista,
+  });
+  if (sesion.tipo === 'INVITADO') iniciarAvisoInvitado({ alTerminar: (m) => salir(m) });
+  if (ID_UNIDAD == null) {
+    $('vehNombre').textContent = sesion.tipo === 'ADMIN' ? 'Panel de administración' : 'Mis vehículos';
+    $('sinUnidadTexto').textContent = sesion.tipo === 'ADMIN'
+      ? 'Para operar una unidad de la empresa, elígela en «Mis vehículos».'
+      : 'Elige una de tus unidades en «Mis vehículos».';
+    navegacion.iniciar();
+    return;
+  }
+  navegacion.iniciar();
+  iniciarOperacion(sesion);
+}
+
+arrancar();

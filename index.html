@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F7F4FD">
-<meta name="description" content="Aplicación web de control para un vehículo IoT: joystick, comandos y DEMO.">
+<meta name="description" content="Plataforma IoT: control, monitoreo y administración de vehículos con roles.">
 <title>Control de vehículo IoT</title>
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/img/favicon-32.png" type="image/png" sizes="32x32">
@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-<link href="assets/css/estilos.css?v=2026-11-14d" rel="stylesheet">
+<link href="assets/css/estilos.css?v=2026-11-22b" rel="stylesheet">
 <script type="module" src="assets/js/main.js"></script>
 </head>
 <body>
@@ -46,6 +46,16 @@
   <symbol id="i-actividad" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
   <symbol id="i-lista" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
   <symbol id="i-recargar" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></symbol>
+  <symbol id="i-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-salir" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></symbol>
+  <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-coche" viewBox="0 0 24 24"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="19" r="1.5"/><circle cx="16.5" cy="19" r="1.5"/></symbol>
+  <symbol id="i-tienda" viewBox="0 0 24 24"><path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM9 20v-6h6v6"/></symbol>
+  <symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-editar" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="i-basura" viewBox="0 0 24 24"><path d="M5 7h14M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-abajo" viewBox="0 0 24 24"><path d="M12 5v14M5.5 12.5L12 19l6.5-6.5"/></symbol>
+  <symbol id="i-cerrar" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
 </svg>
 
 <header class="encabezado container-xl">
@@ -58,10 +68,30 @@
   <nav class="navegacion" aria-label="Secciones de la aplicación">
     <a class="nav-enlace" href="#control" data-vista="control"><svg class="ico" aria-hidden="true"><use href="#i-mando"/></svg><span>Control</span></a>
     <a class="nav-enlace" href="#monitoreo" data-vista="monitoreo"><svg class="ico" aria-hidden="true"><use href="#i-actividad"/></svg><span>Monitoreo</span></a>
+    <a class="nav-enlace" href="#unidades" data-vista="unidades" hidden><svg class="ico" aria-hidden="true"><use href="#i-coche"/></svg><span>Mis vehículos</span></a>
+    <a class="nav-enlace" href="#administracion" data-vista="administracion" hidden><svg class="ico" aria-hidden="true"><use href="#i-escudo"/></svg><span>Administración</span></a>
   </nav>
+  <div class="cuenta" id="cuenta" hidden>
+    <span class="cuenta-avatar" id="cuentaAvatar" aria-hidden="true"></span>
+    <span class="cuenta-datos"><span class="cuenta-nombre" id="cuentaNombre"></span><span class="cuenta-rol" id="cuentaRol"></span></span>
+    <button type="button" class="cuenta-salir" id="cuentaSalir"><svg class="ico" aria-hidden="true"><use href="#i-salir"/></svg><span class="visually-hidden">Cerrar sesión</span></button>
+  </div>
 </header>
 
 <main class="container-xl" id="contenido">
+  <!-- 4.3: aviso de la prueba de Invitado (tiempo restante) -->
+  <div class="aviso-invitado" id="avisoInvitado" role="status" hidden>
+    <svg class="ico" aria-hidden="true"><use href="#i-reloj"/></svg>
+    <span>Prueba de Invitado · <strong id="invitadoTiempo">--:--</strong> restantes · solo comandos permitidos</span>
+    <button type="button" class="btn boton-secundario btn-chico" id="invitadoTerminar">Terminar prueba</button>
+  </div>
+  <!-- 4.3: sin unidad elegida (Admin sin unidades de empresa, comprador sin vehículos, etc.) -->
+  <div class="sin-unidad" id="sinUnidad" hidden>
+    <svg class="ico" aria-hidden="true"><use href="#i-coche"/></svg>
+    <p class="mb-1"><strong>No hay una unidad seleccionada.</strong></p>
+    <p class="nota mb-2" id="sinUnidadTexto">Elige una en «Mis vehículos».</p>
+    <a class="btn boton-principal btn-chico" href="#unidades" id="sinUnidadIr">Ir a Mis vehículos</a>
+  </div>
   <!-- ===== Vista CONTROL (práctica 4.1) ===== -->
   <section class="remoto vista" id="zonaControl" data-vista="control" aria-labelledby="tituloMando" tabindex="-1">
     <h2 id="tituloMando" class="visually-hidden">Control remoto del vehículo</h2>
@@ -203,6 +233,113 @@
       <p class="nota mb-0">Solo movimientos individuales persistidos en RDS y leídos con la API. Los pasos de una DEMO no se guardan en el historial.</p>
     </section>
   </section>
+
+  <!-- ===== Vista ACCESO (práctica 4.3) ===== -->
+  <section class="acceso vista" id="vistaAcceso" data-vista="acceso" aria-labelledby="tituloAcceso" tabindex="-1" hidden>
+    <h2 id="tituloAcceso" class="visually-hidden">Acceso a la plataforma</h2>
+    <section class="mon-tarjeta acceso-login" aria-labelledby="tituloLogin">
+      <h3 id="tituloLogin" class="mon-titulo"><svg class="ico" aria-hidden="true"><use href="#i-usuario"/></svg>Inicia sesión</h3>
+      <p class="texto-suave">Administradores y compradores entran con la cuenta de Google que registró la empresa.</p>
+      <div class="google-boton" id="googleBoton"></div>
+      <p class="nota mb-0 mt-2" id="loginEstado" role="status"></p>
+    </section>
+    <section class="mon-tarjeta acceso-catalogo" aria-labelledby="tituloCatalogo">
+      <header class="mon-cabecera">
+        <h3 id="tituloCatalogo" class="mon-titulo"><svg class="ico" aria-hidden="true"><use href="#i-tienda"/></svg>Prueba nuestros vehículos IoT</h3>
+        <span class="chip" id="catalogoChip">Sin cuenta</span>
+      </header>
+      <p class="texto-suave">Elige una unidad de exhibición y contrólala unos minutos. Solo una persona a la vez; al terminar, la unidad se detiene.</p>
+      <div class="catalogo" id="catalogo" aria-live="polite"><p class="nota">Cargando catálogo…</p></div>
+    </section>
+  </section>
+
+  <!-- ===== Vista MIS VEHÍCULOS + editor de demos (práctica 4.3) ===== -->
+  <section class="unidades vista" id="vistaUnidades" data-vista="unidades" aria-labelledby="tituloUnidades" tabindex="-1" hidden>
+    <h2 id="tituloUnidades" class="visually-hidden">Mis vehículos y demos</h2>
+    <section class="mon-tarjeta" aria-labelledby="tituloMisVehiculos">
+      <header class="mon-cabecera">
+        <h3 id="tituloMisVehiculos" class="mon-titulo"><svg class="ico" aria-hidden="true"><use href="#i-coche"/></svg><span id="tituloMisVehiculosTexto">Mis vehículos</span></h3>
+      </header>
+      <div class="unidades-lista" id="unidadesLista" aria-live="polite"><p class="nota">Cargando…</p></div>
+    </section>
+    <section class="mon-tarjeta" id="demosSeccion" aria-labelledby="tituloDemosEditor" hidden>
+      <header class="mon-cabecera">
+        <h3 id="tituloDemosEditor" class="mon-titulo"><svg class="ico" aria-hidden="true"><use href="#i-demo"/></svg><span id="tituloDemosTexto">Demos</span></h3>
+        <button type="button" class="btn boton-principal btn-chico" id="demoNueva"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg><span>Nueva demo</span></button>
+      </header>
+      <div class="demos-lista" id="demosLista" aria-live="polite"></div>
+      <form class="editor" id="editorDemo" novalidate hidden aria-labelledby="editorTitulo">
+        <h4 class="editor-titulo" id="editorTitulo">Nueva demo</h4>
+        <div class="editor-campos">
+          <label class="form-label" for="editorNombre">Nombre</label>
+          <input class="form-control" id="editorNombre" maxlength="80" required>
+          <label class="form-label" for="editorDescripcion">Descripción</label>
+          <input class="form-control" id="editorDescripcion" maxlength="255">
+          <label class="editor-activo"><input type="checkbox" id="editorActivo" checked> Activa (aparece en CONTROL)</label>
+        </div>
+        <p class="grupo-titulo mt-3 mb-2">Pasos</p>
+        <ol class="pasos" id="pasosLista"></ol>
+        <button type="button" class="btn boton-secundario btn-chico" id="pasoAgregar"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg><span>Agregar paso</span></button>
+        <p class="editor-total" id="editorTotal" aria-live="polite"></p>
+        <p class="editor-error" id="editorError" role="alert" hidden></p>
+        <div class="editor-acciones">
+          <button type="button" class="btn boton-secundario" id="editorCancelar">Cancelar</button>
+          <button type="submit" class="btn boton-principal" id="editorGuardar">Guardar demo</button>
+        </div>
+      </form>
+    </section>
+  </section>
+
+  <!-- ===== Vista ADMINISTRACIÓN (práctica 4.3) ===== -->
+  <section class="administracion vista" id="vistaAdmin" data-vista="administracion" aria-labelledby="tituloAdmin" tabindex="-1" hidden>
+    <h2 id="tituloAdmin" class="visually-hidden">Administración comercial</h2>
+    <div class="dash" id="dashboard" aria-live="polite"></div>
+    <div class="admin-tabs" role="tablist" aria-label="Secciones de administración">
+      <button type="button" role="tab" class="admin-tab" id="tabUnidades" aria-controls="panelUnidades" aria-selected="true">Unidades</button>
+      <button type="button" role="tab" class="admin-tab" id="tabModelos" aria-controls="panelModelos" aria-selected="false">Modelos</button>
+      <button type="button" role="tab" class="admin-tab" id="tabClientes" aria-controls="panelClientes" aria-selected="false">Clientes</button>
+      <button type="button" role="tab" class="admin-tab" id="tabBitacora" aria-controls="panelBitacora" aria-selected="false">Bitácora</button>
+    </div>
+    <section class="mon-tarjeta admin-panel" id="panelUnidades" role="tabpanel" aria-labelledby="tabUnidades">
+      <header class="mon-cabecera">
+        <h3 class="mon-titulo">Inventario de unidades</h3>
+        <button type="button" class="btn boton-principal btn-chico" id="unidadNueva"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg><span>Nueva unidad</span></button>
+      </header>
+      <div class="filtros">
+        <label class="visually-hidden" for="filtroEstado">Filtrar por estado</label>
+        <select class="form-select" id="filtroEstado">
+          <option value="">Todos los estados</option><option>DISPONIBLE</option><option>ASIGNADO</option><option>EXHIBICION</option><option>INACTIVO</option>
+        </select>
+        <label class="visually-hidden" for="filtroBuscar">Buscar</label>
+        <input class="form-control" id="filtroBuscar" type="search" placeholder="Buscar serie, nombre, modelo o correo">
+      </div>
+      <div class="tabla-caja"><table class="tabla-mov tabla-admin" id="tablaUnidades"><caption class="visually-hidden">Unidades</caption></table></div>
+    </section>
+    <section class="mon-tarjeta admin-panel" id="panelModelos" role="tabpanel" aria-labelledby="tabModelos" hidden>
+      <header class="mon-cabecera">
+        <h3 class="mon-titulo">Modelos comerciales</h3>
+        <button type="button" class="btn boton-principal btn-chico" id="modeloNuevo"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg><span>Nuevo modelo</span></button>
+      </header>
+      <div class="tabla-caja"><table class="tabla-mov tabla-admin" id="tablaModelos"><caption class="visually-hidden">Modelos</caption></table></div>
+    </section>
+    <section class="mon-tarjeta admin-panel" id="panelClientes" role="tabpanel" aria-labelledby="tabClientes" hidden>
+      <header class="mon-cabecera">
+        <h3 class="mon-titulo">Clientes y administradores</h3>
+        <button type="button" class="btn boton-principal btn-chico" id="usuarioNuevo"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg><span>Nueva cuenta</span></button>
+      </header>
+      <div class="tabla-caja"><table class="tabla-mov tabla-admin" id="tablaUsuarios"><caption class="visually-hidden">Cuentas</caption></table></div>
+    </section>
+    <section class="mon-tarjeta admin-panel" id="panelBitacora" role="tabpanel" aria-labelledby="tabBitacora" hidden>
+      <header class="mon-cabecera">
+        <h3 class="mon-titulo">Bitácora de auditoría</h3>
+        <div class="paginas">
+          <button type="button" class="btn boton-secundario btn-chico" id="bitacoraRecientes">Más recientes</button>
+          <button type="button" class="btn boton-secundario btn-chico" id="bitacoraAntiguos">Más antiguos</button>
+        </div>
+      </header>
+      <div class="tabla-caja"><table class="tabla-mov tabla-admin" id="tablaBitacora"><caption class="visually-hidden">Bitácora</caption></table></div>
+    </section>
+  </section>
 </main>
 
 <footer class="pie container-xl"><p class="mb-0" id="creditos"></p></footer>
@@ -227,6 +364,16 @@
   </div>
   <p class="texto-suave mb-0" id="demoEstado" role="status"></p>
   <div class="progress demo-barra" id="demoBarra" role="progressbar" aria-label="Avance de la DEMO" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div class="progress-bar"></div></div>
+</div>
+</dialog>
+<!-- 4.3: diálogo reutilizable para los formularios de Administración y Mis vehículos -->
+<dialog class="dialogo" id="dlgForm" aria-labelledby="dlgFormTitulo">
+<div class="dialogo-contenido">
+  <div class="dialogo-cabecera">
+    <h2 id="dlgFormTitulo"></h2>
+    <button type="button" class="dialogo-cerrar" id="dlgFormCerrar" aria-label="Cerrar"><svg class="ico" aria-hidden="true"><use href="#i-cerrar"/></svg></button>
+  </div>
+  <form id="dlgFormCuerpo" class="dlg-form" novalidate></form>
 </div>
 </dialog>
 <div id="avisos" class="avisos" aria-live="polite"></div>

@@ -2,8 +2,10 @@
 import { CONFIG, RUTAS } from '../config.js';
 import { ApiError } from '../utilidades/errores.js';
 import { solicitar } from './cliente.js';
+import { obtenerUnidad } from './sesion.js';
 
-const ID = CONFIG.VEHICLE_ID;
+// 4.3: la unidad la elige cada cuenta (Mis vehículos) y al cambiarla la app se recarga.
+const ID = obtenerUnidad()?.id ?? 0;
 const esId = (v) => Number.isInteger(v) && v > 0;
 const texto = (v) => (typeof v === 'string' ? v : '');
 
@@ -85,5 +87,5 @@ export function comprobarApi() {
 export const hayDiagnosticoRds = () => Boolean(RUTAS.diagnosticoRds);
 
 export function comprobarRds() {
-  return solicitar(RUTAS.diagnosticoRds(ID), { timeoutMs: CONFIG.TIEMPOS.SALUD_MS });
+  return solicitar(RUTAS.diagnosticoRds(), { timeoutMs: CONFIG.TIEMPOS.SALUD_MS });
 }

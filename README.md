@@ -1,4 +1,4 @@
-# Vehículo IoT · CONTROL + MONITOREO (prácticas 4.1 y 4.2)
+# Vehículo IoT · CONTROL + MONITOREO + ADMINISTRACIÓN (prácticas 4.1, 4.2 y 4.3)
 
 Aplicación web Mobile First publicada en GitHub Pages: https://lissy-hub1.github.io/websocket_iot/
 
@@ -152,3 +152,50 @@ Abre además un cliente WebSocket independiente (Postman, Thunder Client o exten
 | C. Otra sesión y límite | Desde otra pestaña o Postman envía más de 10 movimientos | MONITOREO se actualiza solo; exactamente 10 filas, sin duplicados |
 | D. Reconexión | Corta la red (DevTools → Offline) y vuelve | WSS pasa a Desconectado/Reconectando y regresa; nueva carga REST en Network |
 | E. DEMO y diseño | Ejecuta una DEMO con `#monitoreo` abierto | La tarjeta muestra los pasos; la tabla no cambia. Revisa vertical, horizontal y escritorio |
+
+## Práctica 4.3 · Administración, roles e Invitado
+
+La misma página agrega inicio de sesión con Google, menú por rol y dos vistas nuevas. **Ya no hay ninguna clave
+en el navegador**: `config.js` solo tiene la URL de la API; el Client ID de Google se lee de `GET /auth/config`.
+
+| Rol | Cómo entra | Vistas |
+|---|---|---|
+| Administrador (empresa) | Botón de Google con un correo de `ADMIN_EMAILS` o promovido por otro Admin | Control · Monitoreo · Mis vehículos · Administración |
+| Usuario (comprador) | Botón de Google con el correo que el Admin dio de alta | Control · Monitoreo · Mis vehículos (sus unidades y demos privadas) |
+| Invitado (prospecto) | Sin cuenta: «Prueba nuestros vehículos IoT» | Control y Monitoreo de UNA unidad de exhibición, por minutos |
+
+El menú solo ordena la interfaz: **la seguridad la aplica la API** en cada petición (401 sin sesión, 403 sin
+permiso sobre la unidad) y en el WebSocket (cierre 4401/4403).
+
+### Módulos nuevos
+
+```
+assets/js/api/sesion.js          Token de sesión y unidad elegida (sessionStorage de la pestaña)
+assets/js/api/plataforma.js      Llamadas de auth, administración, Mis vehículos, editor e Invitado
+assets/js/ui/formulario.js       Formularios accesibles en un <dialog> reutilizable
+assets/js/vistas/acceso.js       Login con Google Identity Services + catálogo público
+assets/js/vistas/invitado.js     Aviso con el tiempo restante de la prueba
+assets/js/vistas/unidades.js     Mis vehículos, soporte autorizado y editor de demos
+assets/js/vistas/administracion.js  Dashboard, unidades, modelos, clientes/roles y bitácora
+```
+
+Módulos modificados: `api/cliente.js` (envía `Authorization: Bearer`), `api/vehiculo.js` (unidad elegida),
+`conexion/websocket.js` (primer mensaje `{"tipo":"auth","token":…}`), `ui/navegacion.js` (vistas por rol) y
+`main.js` (valida la sesión con `GET /auth/yo` antes de abrir conexiones).
+
+### Flujo
+
+1. Sin sesión: **Acceso** (botón de Google y catálogo de unidades en exhibición).
+2. Con sesión: si la cuenta opera una sola unidad, se elige sola; si no, se elige en **Mis vehículos**.
+   Cambiar de unidad recarga la app, así se cierra la suscripción WSS de la unidad anterior.
+3. **Editor de demos**: pasos ordenados con comando, duración (100–5000 ms) y pausa (0–5000 ms); máximo 30 pasos
+   y 120 s. Se valida aquí y otra vez en la API (comandos de ESA unidad).
+4. **Invitado**: reserva exclusiva y temporal; solo los comandos permitidos; sin DEMO. Al terminar, vencer o
+   desconectarse, la API envía DETENER a la unidad.
+
+### Configurar el login con Google (una vez)
+
+1. Google Cloud Console → Credenciales → ID de cliente de OAuth → **Aplicación web**.
+2. Orígenes de JavaScript autorizados: `https://lissy-hub1.github.io` (y `http://localhost:5500` para pruebas).
+3. En el `.env` del servidor: `GOOGLE_CLIENT_ID=<…apps.googleusercontent.com>` y `ADMIN_EMAILS=<correo admin>`;
+   reinicia la API. El frontend no necesita cambios.
