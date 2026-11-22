@@ -44,8 +44,11 @@ async function prepararLogin(config) {
   try {
     await cargarScriptGoogle();
     google.accounts.id.initialize({ client_id: config.google_client_id, callback: alCredencialGoogle, ux_mode: 'popup' });
+    // El botón oficial acepta 200–400 px: ocupa el ancho de la tarjeta sin pasarse.
+    const ancho = Math.round(Math.max(200, Math.min(300, $('googleBoton').clientWidth || 280)));
     google.accounts.id.renderButton($('googleBoton'), {
-      theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', locale: 'es', width: 280,
+      theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', locale: 'es', width: ancho,
+      logo_alignment: 'center',
     });
   } catch {
     estado.textContent = 'No se pudo cargar el botón de Google. Revisa tu conexión y recarga la página.';

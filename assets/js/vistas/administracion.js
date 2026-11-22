@@ -11,9 +11,9 @@ import { CONFIG } from '../config.js';
 
 const ESTADOS = { DISPONIBLE: 'Disponible', ASIGNADO: 'Vendido / asignado', EXHIBICION: 'Exhibición', INACTIVO: 'Inactivo' };
 const DASH = [
-  ['modelos', 'Modelos activos'], ['unidades', 'Unidades'], ['unidades_asignadas', 'Vendidas / asignadas'],
-  ['unidades_disponibles', 'Disponibles'], ['unidades_exhibicion', 'En exhibición'], ['unidades_inactivas', 'Inactivas'],
-  ['clientes', 'Clientes'], ['demos', 'Demos'], ['invitados_activos', 'Invitados en prueba'],
+  ['modelos', 'Modelos activos', 'lista'], ['unidades', 'Unidades', 'coche'], ['unidades_asignadas', 'Vendidas / asignadas', 'usuario'],
+  ['unidades_disponibles', 'Disponibles', 'check'], ['unidades_exhibicion', 'En exhibición', 'tienda'], ['unidades_inactivas', 'Inactivas', 'parar'],
+  ['clientes', 'Clientes', 'usuario'], ['demos', 'Demos', 'demo'], ['invitados_activos', 'Invitados en prueba', 'reloj'],
 ];
 const PAGINA_BITACORA = 25;
 
@@ -63,8 +63,11 @@ async function cargar(funcion, destino, mensaje) {
 async function pintarDashboard() {
   const d = await cargar(admin.dashboard, $('dashboard'), 'No se pudo cargar el dashboard');
   if (!d) return;
-  $('dashboard').replaceChildren(...DASH.map(([clave, titulo]) =>
-    elemento('div', { class: 'dash-tarjeta' }, elemento('span', { class: 'dash-valor' }, String(d[clave])), elemento('span', { class: 'dash-titulo' }, titulo))));
+  $('dashboard').replaceChildren(...DASH.map(([clave, titulo, nombreIcono]) =>
+    elemento('div', { class: 'dash-tarjeta' },
+      elemento('span', { class: 'dash-icono', 'aria-hidden': 'true' }, icono(nombreIcono)),
+      elemento('span', { class: 'dash-titulo' }, titulo),
+      elemento('span', { class: 'dash-valor' }, String(d[clave] ?? '—')))));
 }
 
 // ------------------------------------------------------------------ unidades
