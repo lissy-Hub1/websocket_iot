@@ -236,8 +236,9 @@ function cambiarActivo(u) {
 function eliminarUsuario(u) {
   confirmar({
     titulo: `Eliminar ${u.email}`,
-    texto: 'Se borrará la cuenta de forma permanente. Solo es posible si nunca tuvo unidades, demos ni soporte '
-      + '(por ejemplo, un correo mal escrito). Si tiene historial, la API te pedirá darla de baja.',
+    texto: u.ultimo_acceso
+      ? 'Esta cuenta ya inició sesión. Solo se puede eliminar si no tiene historial; si lo tiene, la API te pedirá darla de baja.'
+      : 'Esta cuenta nunca inició sesión (por ejemplo, un correo mal escrito). Se borrará de forma permanente; la bitácora conserva el registro.',
     boton: 'Eliminar',
     enviar: async () => {
       await admin.eliminarUsuario(u.id_usuario);
@@ -259,7 +260,9 @@ function pintarUsuarios() {
       return [
         botonAccion('Editar', 'editar', () => formularioUsuario(u)),
         yo ? null : botonAccion(u.activo ? 'Dar de baja' : 'Reactivar', u.activo ? 'cerrar' : 'check', () => cambiarActivo(u), u.activo),
-        yo || u.unidades > 0 ? null : botonAccion('Eliminar', 'basura', () => eliminarUsuario(u), true),
+        yo ? null : botonAccion('Eliminar', 'basura', () => (u.unidades > 0
+          ? avisar('info', 'Tiene una unidad asignada: revócala primero en la pestaña Unidades.')
+          : eliminarUsuario(u)), true),
       ].filter(Boolean);
     } },
   ], usuarios, 'Sin cuentas registradas.');
