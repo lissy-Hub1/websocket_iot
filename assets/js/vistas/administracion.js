@@ -4,7 +4,7 @@ import { admin, comandosUnidad } from '../api/plataforma.js';
 import { obtenerSesion } from '../api/sesion.js';
 import { avisar } from '../ui/avisos.js';
 import { $, elemento, icono } from '../ui/componentes.js';
-import { abrirFormulario } from '../ui/formulario.js';
+import { abrirFormulario, confirmar } from '../ui/formulario.js';
 import { formatearFecha, formatearHora, interpretarFecha } from '../utilidades/fechas.js';
 import { mensajeDeError } from '../utilidades/errores.js';
 import { CONFIG } from '../config.js';
@@ -216,6 +216,37 @@ function formularioUsuario(u) {
   });
 }
 
+function cambiarActivo(u) {
+  const activar = !u.activo;
+  confirmar({
+    titulo: activar ? `Reactivar ${u.email}` : `Dar de baja ${u.email}`,
+    texto: activar
+      ? 'Podrá volver a iniciar sesión con su cuenta de Google.'
+      : 'No podrá iniciar sesión y se cierran sus sesiones abiertas. Su historial (asignaciones, demos y bitácora) se conserva.',
+    boton: activar ? 'Reactivar' : 'Dar de baja',
+    peligro: !activar,
+    enviar: async () => {
+      await admin.editarUsuario(u.id_usuario, { nombre: u.nombre, rol: u.rol, activo: activar });
+      avisar('exito', activar ? 'Cuenta reactivada.' : 'Cuenta dada de baja.');
+      refrescarTodo();
+    },
+  });
+}
+
+function eliminarUsuario(u) {
+  confirmar({
+    titulo: `Eliminar ${u.email}`,
+    texto: 'Se borrará la cuenta de forma permanente. Solo es posible si nunca tuvo unidades, demos ni soporte '
+      + '(por ejemplo, un correo mal escrito). Si tiene historial, la API te pedirá darla de baja.',
+    boton: 'Eliminar',
+    enviar: async () => {
+      await admin.eliminarUsuario(u.id_usuario);
+      avisar('exito', 'Cuenta eliminada.');
+      refrescarTodo();
+    },
+  });
+}
+
 function pintarUsuarios() {
   tabla('tablaUsuarios', [
     { titulo: 'Cuenta', valor: (u) => elemento('span', { class: 'mov-texto' }, elemento('span', { class: 'mov-nombre' }, u.nombre ?? u.email), elemento('span', { class: 'mov-detalle' }, u.email)) },
@@ -223,7 +254,14 @@ function pintarUsuarios() {
     { titulo: 'Unidades', valor: (u) => u.unidades },
     { titulo: 'Último acceso', clase: 'col-ocultable', valor: (u) => fechaHora(u.ultimo_acceso) },
     { titulo: 'Estado', valor: (u) => elemento('span', { class: `chip-estado ${u.activo ? 'ok' : 'estado-inactivo'}` }, u.activo ? 'Activa' : 'Baja') },
-    { titulo: 'Acciones', clase: 'col-acciones', valor: (u) => [botonAccion('Editar', 'editar', () => formularioUsuario(u))] },
+    { titulo: 'Acciones', clase: 'col-acciones', valor: (u) => {
+      const yo = u.id_usuario === obtenerSesion()?.usuario?.id_usuario;
+      return [
+        botonAccion('Editar', 'editar', () => formularioUsuario(u)),
+        yo ? null : botonAccion(u.activo ? 'Dar de baja' : 'Reactivar', u.activo ? 'cerrar' : 'check', () => cambiarActivo(u), u.activo),
+        yo || u.unidades > 0 ? null : botonAccion('Eliminar', 'basura', () => eliminarUsuario(u), true),
+      ].filter(Boolean);
+    } },
   ], usuarios, 'Sin cuentas registradas.');
 }
 

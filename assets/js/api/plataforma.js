@@ -45,5 +45,6 @@ export const admin = {
   usuarios: () => solicitar('/admin/usuarios'),
   crearUsuario: (u) => solicitar('/admin/usuarios', json('POST', u)),
   editarUsuario: (id, u) => solicitar(`/admin/usuarios/${id}`, json('PUT', u)),
+  eliminarUsuario: (id) => solicitar(`/admin/usuarios/${id}`, json('DELETE')),
   auditoria: (limite, desde) => solicitar(`/admin/auditoria?limite=${limite}&desde=${desde}`),
 };
