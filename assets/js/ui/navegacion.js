@@ -41,7 +41,7 @@ export function crearNavegacion({ rol = 'ANONIMO', predeterminada, alCambiar }) 
       if (enlace.dataset.vista === vista) enlace.setAttribute('aria-current', 'page');
       else enlace.removeAttribute('aria-current');
     }
-    document.title = `${TITULOS[vista] ?? 'Vehículo'} · vehículo IoT`;
+    document.title = `${TITULOS[vista] ?? 'Inicio'} · RIG·OS`;
     if (enfocar) document.querySelector(`.vista[data-vista="${vista}"]`)?.focus({ preventScroll: true });
     window.scrollTo(0, 0);
     alCambiar?.(vista);

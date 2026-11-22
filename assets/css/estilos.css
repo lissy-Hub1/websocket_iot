@@ -1021,6 +1021,28 @@ html[data-vista="acceso"] body {
   .monitoreo .ultimo-datos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
+/* =========================================================================
+   Marca RIG·OS: imagotipo original de la autora (assets/img/rigos-logo.png, fondo transparente con su brillo).
+   Favicons e ícono de iPhone salen de su isotipo (rigos-isotipo.png).
+   ========================================================================= */
+html .encabezado-sub.marca {
+  display: block; margin: 0 0 .3rem; line-height: 0; letter-spacing: 0;
+  background: none; -webkit-background-clip: border-box; background-clip: border-box; filter: none;
+}
+.marca-img { display: block; width: auto; height: 34px; }
+html[data-vista="acceso"] .marca-img { height: 50px; }
+html[data-vista="acceso"] .encabezado-sub.marca { margin: 0; }
+@media (min-width: 992px) {
+  html:not([data-vista="acceso"]) .encabezado-sub.marca { grid-column: 1 / -1; margin: 0; }
+  html:not([data-vista="acceso"]) .marca-img { width: 100%; max-width: 214px; height: auto; margin-left: -6px; }
+}
+/* Teléfono acostado: la marca pequeña al lado del nombre de la unidad. */
+@media (orientation: landscape) and (max-height: 540px) {
+  html .encabezado-sub.marca { display: block; margin: 0; }
+  .encabezado-texto { display: flex; align-items: center; gap: .5rem; }
+  .marca-img { height: 26px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
