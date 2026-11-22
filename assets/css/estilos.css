@@ -627,6 +627,14 @@ h1, h2, h3 { font-family: var(--titulo); }
 .dlg-check input { width: 18px; height: 18px; accent-color: var(--morado); }
 .requerido { color: var(--rosa); }
 
+/* Página de política de privacidad */
+.legal { max-width: 52rem; padding-bottom: 1.5rem; }
+.legal h2 { margin: 1.4rem 0 .5rem; font: 600 1.15rem var(--titulo); color: var(--morado-texto); }
+.legal p, .legal li { line-height: 1.6; }
+.legal ul { padding-left: 1.2rem; }
+.legal a { color: var(--morado-texto); }
+.pie a { color: var(--morado-texto); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }

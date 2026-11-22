@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F4FD">
+<meta name="description" content="Política de privacidad de la plataforma Vehículo IoT.">
+<title>Política de privacidad · Vehículo IoT</title>
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/img/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link href="assets/css/estilos.css?v=2026-11-22c" rel="stylesheet">
+</head>
+<body>
+<header class="encabezado container-xl">
+  <img src="assets/img/favicon.svg" width="44" height="44" alt="" class="encabezado-logo">
+  <div class="encabezado-texto">
+    <p class="encabezado-sub">Vehículo IoT</p>
+    <h1>Política de privacidad</h1>
+  </div>
+  <nav class="navegacion" aria-label="Volver">
+    <a class="nav-enlace" href="./">Ir a la plataforma</a>
+  </nav>
+</header>
+
+<main class="container-xl legal">
+  <article class="mon-tarjeta">
+    <p class="nota">Última actualización: 21 de noviembre de 2026</p>
+
+    <p>Vehículo IoT es una plataforma académica (Tecnológico Nacional de México, campus Pachuca, Ingeniería en
+    Sistemas Computacionales, asignatura <em>Implementación de soluciones IoT</em>) para controlar, monitorear y
+    administrar vehículos IoT. Esta política explica qué datos se usan cuando inicias sesión y para qué.</p>
+
+    <h2>Datos que obtenemos de tu cuenta de Google</h2>
+    <p>Al pulsar «Acceder con Google» solo se solicitan los permisos básicos de identidad
+    (<code>openid</code>, <code>email</code> y <code>profile</code>). De ellos se guarda:</p>
+    <ul>
+      <li>Tu <strong>correo electrónico</strong>, para saber si tu cuenta fue dada de alta por la empresa y con qué rol.</li>
+      <li>Tu <strong>nombre</strong>, para mostrarlo en la aplicación.</li>
+      <li>El <strong>identificador de tu cuenta de Google</strong>, para reconocerte en los siguientes inicios de sesión.</li>
+    </ul>
+    <p>No accedemos a tus contactos, archivos, correos, calendario ni a ningún otro servicio de Google, y
+    nunca conocemos tu contraseña.</p>
+
+    <h2>Datos que genera el uso de la plataforma</h2>
+    <ul>
+      <li>La <strong>fecha de tu último acceso</strong> y una sesión con vencimiento. De la sesión solo se guarda una
+        huella cifrada (hash), no el token.</li>
+      <li>Los <strong>movimientos y demos</strong> que envías a los vehículos, con su fecha y hora.</li>
+      <li>Una <strong>bitácora de auditoría</strong> de acciones administrativas y de seguridad (altas, asignaciones,
+        cambios de rol, edición de demos, inicios de sesión y accesos rechazados). No contiene contraseñas ni tokens.</li>
+      <li>Si usas «Prueba nuestros vehículos IoT» sin cuenta, solo se registra la unidad reservada y el tiempo de la
+        prueba; no se pide ningún dato personal.</li>
+    </ul>
+
+    <h2>Para qué se usan</h2>
+    <p>Únicamente para iniciar tu sesión, decidir qué vehículos puedes ver u operar, mostrar el historial de
+    movimientos y llevar la bitácora de seguridad que exige la práctica. No se usan con fines publicitarios ni se
+    venden, rentan o comparten con terceros.</p>
+
+    <h2>Dónde se guardan</h2>
+    <p>En una base de datos Amazon RDS (MySQL) a la que solo accede el servidor de la aplicación en Amazon EC2.
+    Toda la comunicación viaja cifrada por HTTPS y WSS. En tu navegador solo queda el token de la sesión mientras
+    la pestaña está abierta (sessionStorage).</p>
+
+    <h2>Cuánto tiempo se conservan</h2>
+    <p>Mientras dure el proyecto académico. Las cuentas no se borran de forma automática: el administrador puede
+    darlas de baja y la sesión deja de funcionar de inmediato.</p>
+
+    <h2>Tus derechos</h2>
+    <p>Puedes pedir que se consulten, corrijan o den de baja tus datos escribiendo al correo de contacto. También
+    puedes retirar el acceso de esta aplicación a tu cuenta en
+    <a href="https://myaccount.google.com/permissions" rel="noopener">myaccount.google.com/permissions</a>.</p>
+
+    <h2>Contacto</h2>
+    <p>Lisset Gutiérrez Cruz · <a href="mailto:l22200737@pachuca.tecnm.mx">l22200737@pachuca.tecnm.mx</a></p>
+  </article>
+</main>
+
+<footer class="pie container-xl"><p class="mb-0">Desarrollado por Lisset Gutiérrez Cruz · 2026</p></footer>
+</body>
+</html>
